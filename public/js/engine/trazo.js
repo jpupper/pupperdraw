@@ -167,7 +167,9 @@
           it: r3(estN('it', P.noiseIterations)),
           pm: estN('pm', P.paintMode | 0),
           rp: estN('rp', P.isShiftDown ? 1 : 0),
-          ad: estN('ad', P.isAdditive ? 1 : 0)
+          ad: estN('ad', P.isAdditive ? 1 : 0),
+          // pincel de imagen: viaja el id para que el otro pinte con la misma
+          im: (est && est.im) ? est.im : (R.imagenPincel || undefined)
         },
         // velocidad de la mano que la sembró: la usan los tips para alimentar la corriente.
         // En las remotas sin dato (historial viejo, cliente viejo) queda null y el motor

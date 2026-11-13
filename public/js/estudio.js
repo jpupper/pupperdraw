@@ -64,7 +64,11 @@
     estado: () => S,
     pincel: (id) => setPincel(id),
     // pincel de imagen: id de la imagen elegida (null = pincel normal)
-    imagenPincel: (id) => { S['pincel.imagen'] = id ? String(id) : null; },
+    imagenPincel: (id) => {
+      S['pincel.imagen'] = id ? String(id) : null;
+      // el motor Van Gogh arma su propio `est`: se le pasa por R
+      if (window.TRAZO && TRAZO.R) TRAZO.R.imagenPincel = S['pincel.imagen'];
+    },
     // parámetros GLOBALES (luz, fluidos, materia): los de la sala
     globales: () => globalesActuales(),
     aplicarGlobal: (est) => aplicarGlobales(est),
@@ -1132,8 +1136,20 @@
           });
         }
         // + las pinceladas de Van Gogh que estén llegando de la sala
+        // OJO: el tip local viaja con SU estilo (estiloTip). Sin esto la pintura
+        // local usa el panel pelado y el pincel de imagen nunca se enteraba (el
+        // remoto sí, porque las huellas ya llevaban `e`): se veía el pincel común.
         const ajenas = TRAZO.frame();
-        E.frame([{ x: tip.x, y: tip.y, dx: tip.dx, dy: tip.dy, first: P.isFirstDown }].concat(ajenas), 1);
+        const propio = {
+          x: tip.x, y: tip.y, dx: tip.dx, dy: tip.dy,
+          rad: Math.max(1, E.radioActual()),
+          soft: P.brushSoft,
+          opac: P.brushOpacity,
+          est: estiloTip(),
+          first: P.isFirstDown,
+          hand: (typeof handSp === 'number') ? handSp : null
+        };
+        E.frame([propio].concat(ajenas), 1);
         tip.moved = false;
       } else {
         const ajenas = TRAZO.frame();
