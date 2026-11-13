@@ -104,7 +104,11 @@
           return;
         }
         vec4 texI = texture2D(uBrushImg, uvI);
-        float mI = clamp(texI.a * brushOpacity, 0.0, 1.0);
+        // fundido muy leve en el borde del sello (1.5%): da pie a que el fluido
+        // arrastre el borde en vez de dejar un canto duro
+        float borde = smoothstep(0.0, 0.015, uvI.x) * smoothstep(1.0, 0.985, uvI.x)
+                    * smoothstep(0.0, 0.015, uvI.y) * smoothstep(1.0, 0.985, uvI.y);
+        float mI = clamp(texI.a * brushOpacity * borde, 0.0, 1.0);
         if (mI <= 0.001) { gl_FragColor = vec4(0.0); return; }
         // El delta de color va PREMULTIPLICADO por la máscara: si se manda el
         // color pleno, en los bordes anti-aliasados (alfa chico) el negro del PNG
@@ -115,7 +119,11 @@
         // REEMPLAZA color y masa: la masa vieja (el ruido que ya estaba) se
         // descuenta con un delta negativo, así el sello queda POR ENCIMA y no
         // por detrás del relieve anterior.
-        gl_FragColor = vec4((mix(base, texI.rgb, mI) - base), mI - baseCol.a);
+        // OVER: la masa nueva tapa en proporcion al alfa de la imagen, pero la
+        // masa vieja no se borra de golpe -> se funde con el fluido y el relieve
+        // anterior sigue aportando en los bordes semitransparentes.
+        float aNueva = max(baseCol.a * (1.0 - mI), mI);
+        gl_FragColor = vec4((mix(base, texI.rgb, mI) - base), aNueva - baseCol.a);
         return;
       }
       float intensity = smoothstep(radius,radius-softness,d);

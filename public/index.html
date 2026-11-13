@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PUPPERDRAW — lienzo colaborativo</title>
 <meta name="description" content="PUPPERDRAW: lienzo colaborativo de pinceladas. Cada uno pinta con su pincel y su color, y todo se sincroniza en vivo.">
-<link rel="stylesheet" href="css/base.css?v=2611131800">
-<link rel="stylesheet" href="css/estudio.css?v=2611131800">
-<link rel="stylesheet" href="css/colab.css?v=2611131800">
+<link rel="stylesheet" href="css/base.css?v=2611131900">
+<link rel="stylesheet" href="css/estudio.css?v=2611131900">
+<link rel="stylesheet" href="css/colab.css?v=2611131900">
 </head>
 <body data-motor="trazo">
 <canvas id="lienzo" width="1920" height="1080"></canvas>
@@ -94,12 +94,19 @@
 
       <section class="bloque" id="bloqueImagen">
         <span class="rotulo">PINCEL CON IMAGEN</span>
-        <div class="img-pincel-fila">
-          <button type="button" class="mas-color" id="btnSubirImagen" title="Subir una imagen para usarla como pincel">+</button>
-          <input type="file" id="inputImagenPincel" accept="image/*" hidden>
-          <span class="img-pincel-estado" id="imgPincelEstado">sin imagen</span>
+        <div class="modos-pincel" id="modosPincel">
+          <button type="button" class="mp" data-modo="vervette">NORMAL</button>
+          <button type="button" class="mp" data-modo="vangogh">VAN GOGH</button>
+          <button type="button" class="mp" data-modo="imagen">IMAGEN</button>
         </div>
-        <div class="muestras" id="listaPinceles"></div>
+        <div id="imgPincelParams" hidden>
+          <div class="img-pincel-fila">
+            <button type="button" class="mas-color" id="btnSubirImagen" title="Subir una imagen para usarla como pincel">+</button>
+            <input type="file" id="inputImagenPincel" accept="image/*" hidden>
+            <span class="img-pincel-estado" id="imgPincelEstado">sin imagen</span>
+          </div>
+          <div class="muestras" id="listaPinceles"></div>
+        </div>
       </section>
 
       <section class="bloque">
@@ -510,26 +517,26 @@
 </div>
 
 
-<script src="js/config.js?v=2611131800"></script>
-<script src="js/nombres.js?v=2611131800"></script>
-<script src="js/engine/shaders.js?v=2611131800"></script>
-<script src="js/engine/replica.js?v=2611131800"></script>
-<script src="js/flowfield.js?v=2611131800"></script>
-<script src="js/flowwind.js?v=2611131800"></script>
-<script src="js/engine/trazo.js?v=2611131800"></script>
-<script src="js/paletas.js?v=2611131800"></script>
-<script src="js/cuadros.js?v=2611131800"></script>
-<script src="js/imagenes.js?v=2611131800"></script>
-<script src="js/color.js?v=2611131800"></script>
-<script src="js/pinceles.js?v=2611131800"></script>
-<script src="js/presets.js?v=2611131800"></script>
-<script src="js/estudio.js?v=2611131800"></script>
-<script src="js/radial.js?v=2611131800"></script>
+<script src="js/config.js?v=2611131900"></script>
+<script src="js/nombres.js?v=2611131900"></script>
+<script src="js/engine/shaders.js?v=2611131900"></script>
+<script src="js/engine/replica.js?v=2611131900"></script>
+<script src="js/flowfield.js?v=2611131900"></script>
+<script src="js/flowwind.js?v=2611131900"></script>
+<script src="js/engine/trazo.js?v=2611131900"></script>
+<script src="js/paletas.js?v=2611131900"></script>
+<script src="js/cuadros.js?v=2611131900"></script>
+<script src="js/imagenes.js?v=2611131900"></script>
+<script src="js/color.js?v=2611131900"></script>
+<script src="js/pinceles.js?v=2611131900"></script>
+<script src="js/presets.js?v=2611131900"></script>
+<script src="js/estudio.js?v=2611131900"></script>
+<script src="js/radial.js?v=2611131900"></script>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="js/pincel-imagen.js?v=2611131800"></script>
-<script src="js/colab.js?v=2611131800"></script>
-<script src="js/cuenta.js?v=2611131800"></script>
-<script src="js/qr-pantalla.js?v=2611131800"></script>
+<script src="js/pincel-imagen.js?v=2611131900"></script>
+<script src="js/colab.js?v=2611131900"></script>
+<script src="js/cuenta.js?v=2611131900"></script>
+<script src="js/qr-pantalla.js?v=2611131900"></script>
 </body>
 </html>

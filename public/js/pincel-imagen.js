@@ -21,6 +21,36 @@
 
   let lista = [];
   let sel = null;
+  let modo = 'vervette';           // verveTte | vangogh | imagen
+
+  const chips = document.querySelectorAll('#modosPincel .mp');
+  const params = $('imgPincelParams');
+
+  function pintarModos() {
+    chips.forEach(c => {
+      const on = c.getAttribute('data-modo') === modo;
+      c.classList.toggle('on', on);
+      c.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    if (params) params.hidden = modo !== 'imagen';
+  }
+
+  function ponerModo(m) {
+    modo = m;
+    if (m === 'imagen') {
+      if (!sel && lista.length) elegir(lista[0].id, lista[0].nombre);
+      if (window.PPD && PPD.pincel) PPD.pincel('vervette');
+      if (window.PPD && PPD.imagenPincel) PPD.imagenPincel(sel);
+      if (!lista.length) aviso('subí una imagen con el +');
+    } else {
+      elegir(null);
+      if (window.PPD && PPD.pincel) PPD.pincel(m);
+      aviso(m === 'vangogh' ? 'pincel Van Gogh' : 'pincel normal');
+    }
+    pintarModos();
+  }
+
+  chips.forEach(c => c.addEventListener('click', () => ponerModo(c.getAttribute('data-modo'))));
 
   function aviso(t) {
     if (estadoTxt) estadoTxt.textContent = t;
@@ -76,8 +106,10 @@
 
   function elegir(id, nombre) {
     sel = id || null;
+    if (sel) modo = 'imagen';
     if (window.PPD && PPD.imagenPincel) PPD.imagenPincel(sel);
     pintarLista();
+    pintarModos();
     if (!sel) { aviso('pincel normal'); return; }
     const p = lista.find(x => x.id === sel);
     aviso('pincel: ' + ((p && p.nombre) || nombre || sel));
@@ -169,5 +201,6 @@
     elegir: elegir
   };
 
+  pintarModos();
   traerLista();
 })();
