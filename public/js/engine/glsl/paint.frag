@@ -37,6 +37,9 @@
     // el alfa de la imagen es la mascara y su RGB el color de la pintura.
     uniform sampler2D uBrushImg;
     uniform float uUseImg;
+    // aspect REAL con el que se muestra el canvas (clientW / clientH). El buffer
+    // suele ser 16:9 y la ventana no: sin esto el sello cuadrado sale estirado.
+    uniform float uImgClientAspect;
 
 
 	float hash(vec2 p)  
@@ -89,7 +92,8 @@
       // del pincel (un disco) recortaba el sello y la imagen quedaba con
       // máscara circular. Acá la forma la da el ALFA de la imagen y nada más.
       if (uUseImg > 0.5) {
-        vec2 ppI = (vUv - point) * vec2(aspectRatio, 1.0);
+        float aspImg = (uImgClientAspect > 0.01) ? uImgClientAspect : aspectRatio;
+        vec2 ppI = (vUv - point) * vec2(aspImg, 1.0);
         float angI = atan(uNoiseAxis.y, uNoiseAxis.x);
         float caI = cos(-angI), saI = sin(-angI);
         vec2 qI = vec2(ppI.x * caI - ppI.y * saI, ppI.x * saI + ppI.y * caI);

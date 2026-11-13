@@ -434,6 +434,10 @@
           gl.uniform1i(P_.paint.uniforms.uBrushImg, 9);
         }
         gl.uniform1f(P_.paint.uniforms.uUseImg, imgTex ? 1 : 0);
+        if (imgTex) {
+          const aspCli = (canvas.clientHeight > 0) ? (canvas.clientWidth / canvas.clientHeight) : aspect;
+          gl.uniform1f(P_.paint.uniforms.uImgClientAspect, aspCli);
+        }
         gl.uniform3f(P_.paint.uniforms.color, color[0], color[1], color[2]);
         gl.uniform1i(P_.paint.uniforms.paintMode, paintModeV);
         setBristle(P_.paint, axis, origin, seed, bristleV, stretchV);
