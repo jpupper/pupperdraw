@@ -1118,6 +1118,21 @@
     };
   }
 
+  /** radio EFECTIVO del pincel local (px del lienzo), fresco en cada frame.
+   *  `E.radioActual()` lee `tip.rad`, y el motor copia ahí el `rad` del último
+   *  tip pintado — el tip es UNO solo y se reusa —: después del primer trazo
+   *  devolvía siempre el mismo número y el slider TAMAÑO quedaba muerto (los
+   *  remotos también veían un ancho fijo, porque `r` sale de acá). Se mide con
+   *  el `rad` prestado en 0 y se lo devuelve. */
+  function radioLocal() {
+    const t = E.brushTip();
+    const prestado = t.rad;
+    t.rad = 0;
+    const r = Math.max(1, E.radioActual());
+    t.rad = prestado;
+    return r;
+  }
+
   function loop(now) {
     const dt = Math.min(3, (now - ultimo) / 16.67) || 1;
     ultimo = now;
@@ -1131,6 +1146,7 @@
     if (motor === 'tip') {
       if (tip.moved) {
         P.bristle = 0;
+        const radLocal = radioLocal();   // ANTES del frame: si no, sale el rad del trazo anterior
         if (VGColor.usesPerLoad()) {
           const c = VGColor.colorForLoad(cargasTip++, tip.x, tip.y);
           if (c) E.color(c[0], c[1], c[2]);
@@ -1142,7 +1158,7 @@
             x: tip.x, y: tip.y, dx: tip.dx, dy: tip.dy,
             // radio EFECTIVO (ya incluye TAMAÑO POR VEL.): si viajara el tamaño pelado,
             // el otro cliente vería un trazo de ancho fijo y no el de acá
-            r: Math.max(1, E.radioActual()),
+            r: radLocal,
             s: P.brushSoft,
             o: P.brushOpacity,
             f: P.isFirstDown ? 1 : 0,   // primer punto del trazo: la misma gota inicial
@@ -1162,7 +1178,7 @@
           // con pincel de imagen el sello sigue el TAMAÑO elegido y llega a x4
           rad: S['pincel.imagen']
             ? Math.max(8, (E.P && E.P.brushSize ? E.P.brushSize : 0.05) * canvas.height * 4)
-            : Math.max(1, E.radioActual()),
+            : radLocal,
           soft: P.brushSoft,
           opac: P.brushOpacity,
           est: estiloTip(),

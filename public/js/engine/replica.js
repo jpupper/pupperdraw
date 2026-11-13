@@ -76,9 +76,9 @@
       setNoiseContrast: v => { P.noiseContrast = v * 0.01; },
       setNoiseBrightness: v => { P.noiseBrightness = v * 0.01; },
       setFluidSpeed: v => {
-        // el slider va 0..300: hasta 100 es el rango de siempre y de ahí para
-        // arriba se acelera el ADVENCTO (no la disipación, que no puede pasar de 1)
-        // hasta 100 queda igual que siempre (1x); de 100 a 300 acelera hasta 3x
+        // el slider va 0..110: hasta 100 es el rango de siempre y el resto
+        // acelera el ADVENCTO (no la disipación, que no puede pasar de 1)
+        // hasta 100 queda igual que siempre (1x); de 100 a 110 llega a 1.1x
         P.fluidSpeedMul = (v <= 100) ? 1 : Math.min(3, v / 100);
         P.fluidSpeed = Math.min(1, Math.pow(Math.max(0.0001, v * 0.01), 0.25));
         let c = v * 0.01; c *= c;
