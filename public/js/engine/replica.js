@@ -24,6 +24,7 @@
       isTexture: true,
       isSizeDynamic: true,
       fluidSpeed: 0.668740304976422,
+      fluidSpeedMul: 1,      // cuánto avanza el fluido por frame (1 = como antes, 3 = 300 en el slider)
       fluidCurl: 0.02,
       fluidIterations: 1.76,
       fluidSlip: 0.5,
@@ -75,7 +76,11 @@
       setNoiseContrast: v => { P.noiseContrast = v * 0.01; },
       setNoiseBrightness: v => { P.noiseBrightness = v * 0.01; },
       setFluidSpeed: v => {
-        P.fluidSpeed = Math.pow(v * 0.01, 0.25);
+        // el slider va 0..300: hasta 100 es el rango de siempre y de ahí para
+        // arriba se acelera el ADVENCTO (no la disipación, que no puede pasar de 1)
+        // hasta 100 queda igual que siempre (1x); de 100 a 300 acelera hasta 3x
+        P.fluidSpeedMul = (v <= 100) ? 1 : Math.min(3, v / 100);
+        P.fluidSpeed = Math.min(1, Math.pow(Math.max(0.0001, v * 0.01), 0.25));
         let c = v * 0.01; c *= c;
         P.fluidIterations = 1 + c * 19;
         P.fluidCurl = c * 0.5;
@@ -551,7 +556,8 @@
       const tx = { x: 1 / textureWidth, y: 1 / textureHeight };
       const sq = tx.x * tx.x + tx.y * tx.y;
       P_.advection.bind();
-      gl.uniform2f(P_.advection.uniforms.texelSize, dt * tx.x, dt * tx.y);
+      const dtV = dt * (P.fluidSpeedMul || 1);
+      gl.uniform2f(P_.advection.uniforms.texelSize, dtV * tx.x, dtV * tx.y);
       gl.uniform1f(P_.advection.uniforms.texelSqr, sq);
       gl.uniform1i(P_.advection.uniforms.uVelocity, velocity.read[2]);
       gl.uniform1i(P_.advection.uniforms.uSource, density.read[2]);
