@@ -273,10 +273,12 @@ io.on('connection', (socket) => {
     socket.data.color = color;
     socket.join(nombreSala);
 
-    // al que entra: el dibujo completo + la configuración de la sala + el chat
+    // al que entra: SOLO la configuración de la sala + el chat.
+    // El lienzo arranca limpio (decisión de producto): no se reconstruye el dibujo previo,
+    // sólo se sincronizan las pinceladas que lleguen a partir de este momento.
     socket.emit('historial', {
       sala: nombreSala,
-      trazos: sala.trazos,
+      trazos: [],
       usuarios: listaUsuarios(sala),
       globales: sala.globales,
       paleta: sala.paleta,

@@ -32,13 +32,6 @@
     uniform vec2 uNoiseSeed;
     uniform float uNoiseStretch;
 
-    // Relieve de la cerda. La luz del motor sale del GRADIENTE de la masa y es un
-    // gradiente ABSOLUTO (no relativo), así que la masa necesita dos cosas para hacer
-    // sombra como el pincel original: nivel suficiente y ruido propio encima.
-    const float VG_RELIEVE   = 2.30;  // escala de la masa en modo cerda
-    const float VG_KRELIEVE  = 0.55;  // cuánto perturba el ruido a la masa
-    const float VG_MASSCEIL  = 4.00;  // techo: más bajo CLIPEA los picos del ruido y aplana
-
 
 	float hash(vec2 p)  
 	{
@@ -112,62 +105,39 @@
           ncoord = (vec2(vUv.x*aspectRatio, vUv.y)+noiseOffset)*noiseScale;
         }
         float n = turb(ncoord);
-        intensity *= mix(1.0,inverted?1.0-n:n,min(1.0,1.5*noiseContrast)*(uBristle>0.5?0.25:1.0));
+        intensity *= mix(1.0,inverted?1.0-n:n,min(1.0,1.5*noiseContrast));
         if (uBristle > 0.5) intensity = clamp(intensity, 0.0, 1.0);
       }
-      // ---- CAMPO DE RUIDO DE LA CAPA (uno solo para el COLOR y para la MASA) ----
+      // ---- CAMPO DE RUIDO DE LA CAPA (modula intensity para que COLOR y MASA sean 1:1) ----
       // La luz del motor sale del gradiente de la masa (alpha) en display_light.frag:
-      // si el ruido vive SOLO en el color, la pincelada se ve plana (el grano no hace
-      // sombra). Con el mismo campo perturbando los dos, la luz revela el grano que se ve.
-      vec2 gp = (vec2(vUv.x * aspectRatio, vUv.y) + uNoiseSeed * 0.371) * max(1.0, uGranoEscala) * 8.0;
-      float n1 = noise(gp);
-      float n2 = noise(gp * 2.7 + vec2(11.0, 7.0));
-      float capa = 0.68 * n1 + 0.32 * n2;                       // -1 .. 1
-      // CAPA DE RUIDO (sobre el COLOR y la MASA, no sobre la intensidad).
-      // Multiplicar intensity no deja grano: el pase escribe un delta contra la base y con
-      // muchas pasadas la mancha converge al mismo color. Perturbando el color objetivo y
-      // la masa, el ruido SI queda en el resultado. Con uGrano = 0 no cambia nada.
-      vec3 colBrush = color;
-      float mGrano = 1.0;
+      // al modular intensity directamente, color y relieve comparten exactamente el mismo
+      // ruido y la iluminacion responde identica al pincel Vervette original.
       if (uGrano > 0.001) {
-        // el value-noise promedia ~0.2: se normaliza para que el grano se note
-        float k = uGrano * clamp(capa * 2.6, -1.0, 1.0);           // -1 .. 1 * fuerza
-        mGrano = clamp(1.0 + 0.65 * k, 0.28, 1.85);                // factor de masa
-        // color: parte multiplicativa (oscurece/aclara) + parte aditiva (se ve tambien en claros)
-        colBrush = clamp(color * (1.0 + 0.62 * k) + vec3(0.13 * k), 0.0, 1.0);
+        vec2 gp = (vec2(vUv.x * aspectRatio, vUv.y) + uNoiseSeed * 0.371) * max(1.0, uGranoEscala) * 8.0;
+        float n1 = noise(gp);
+        float n2 = noise(gp * 2.7 + vec2(11.0, 7.0));
+        float capa = 0.68 * n1 + 0.32 * n2;                       // -1 .. 1
+        float k = uGrano * clamp(capa * 2.6, -1.0, 1.0);
+        intensity = clamp(intensity * (1.0 + 0.55 * k), 0.0, 1.0);
       }
       vec3 col = base;
       if(paintMode==0)
-      	col = base *(1.0-intensity) +intensity * colBrush;
+      	col = base *(1.0-intensity) +intensity * color;
       else if(paintMode==1)
-      	col = base +intensity * colBrush;
+      	col = base +intensity * color;
       else if(paintMode==2)
-        col = base * ((1.0-intensity)+intensity * colBrush);
+        col = base * ((1.0-intensity)+intensity * color);
       else if(paintMode==3){
-        vec3 paint = mix(vec3(0.5,0.5,0.5), colBrush, intensity);
+        vec3 paint = mix(vec3(0.5,0.5,0.5), color, intensity);
         col.r = base.r>0.5?1.-2.*(1.-paint.r)*(1.-base.r):2.*paint.r*base.r;
         col.g = base.g>0.5?1.-2.*(1.-paint.g)*(1.-base.g):2.*paint.g*base.g;
         col.b = base.b>0.5?1.-2.*(1.-paint.b)*(1.-base.b):2.*paint.b*base.b;
       }
       else{
         if((color.r+color.g+color.b)>0.)
-          col = mix(col, normalize(colBrush.rgb)*length(col.rgb), intensity);
+          col = mix(col, normalize(color.rgb)*length(col.rgb), intensity);
       }
-      float alpha = max(0.,baseCol.a+intensity*brushMatAdd*mGrano);
-      if (uBristle > 0.5) {
-        // La masa NO se suma entre pasos: si no, cada paso de la cápsula
-        // (y cada trazo vecino) deja una cuenta y el trazo se ve segmentado.
-        // Tomamos el máximo -> el relieve sigue las vetas de la cerda.
-        // El ruido va en la MASA (no solo en el color): mismo campo que el grano del color
-        // más una octava fina, para que la luz haga sombra dentro de la pincelada.
-        vec2 gpf = gp * 3.1;
-        float capaF = 0.62 * noise(gpf) + 0.38 * noise(gpf * 2.7 + vec2(11.0, 7.0));
-        float kMas = mix(clamp(capa * 2.6, -1.0, 1.0), clamp(capaF * 2.6, -1.0, 1.0), 0.80)
-                   * (0.85 + 0.35 * uGrano);
-        float mMasa = intensity * (1.0 + brushMatAdd) * mix(1.0, mGrano, 0.95)
-                    * max(0.0, 1.0 + VG_KRELIEVE * kMas) * VG_RELIEVE;
-        alpha = min(max(baseCol.a, mMasa), VG_MASSCEIL);
-      }
+      float alpha = max(0.,baseCol.a+intensity*brushMatAdd);
       if (uReplace > 0.5) {
         // REPLACE: la pintura nueva pisa la vieja en vez de sumarse (sin acumular relieve)
         col = mix(base, color, clamp(intensity, 0.0, 1.0));

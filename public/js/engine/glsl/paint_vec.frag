@@ -93,7 +93,7 @@
           ncoord = (vec2(vUv.x*aspectRatio, vUv.y)+noiseOffset)*noiseScale;
         }
         float n = turb(ncoord);
-        intensity *= mix(1.0,inverted?1.0-n:n,min(1.0,1.5*noiseContrast)*(uBristle>0.5?0.25:1.0));
+        intensity *= mix(1.0,inverted?1.0-n:n,min(1.0,1.5*noiseContrast));
         if (uBristle > 0.5) intensity = clamp(intensity, 0.0, 1.0);
       }
       if(!isAdditive)

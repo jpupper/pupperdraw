@@ -11,6 +11,36 @@
   const tip = E.brushTip();
   const P = E.P;
   window.ENGINE = E;
+
+  // ---------------- AJUSTE PARA CELULAR ----------------
+  // El pincel Van Gogh dibuja cada pincelada como geometría aparte (y el fluido
+  // hace pases full-screen). Con el lienzo interno a 1920x1080 un teléfono no
+  // llega: el trazo droppea mientras arrastrás. El pincel común es un solo
+  // trazo continuo, por eso ahí no se nota.
+  // Solución: en celular el buffer interno baja a 1280 px de ancho (se ve igual,
+  // se muestra a ~400 CSS px) y se recorta la cantidad de pinceladas vivas.
+  (function () {
+    const movil = /Android|iPhone|iPad|iPod|Mobile|Opera Mini/i.test(navigator.userAgent)
+      || (navigator.maxTouchPoints > 1 && Math.min(screen.width, screen.height) <= 900)
+      || /[?&]chico=1/.test(location.search);
+
+    if (!movil) return;
+
+    const ANCHO_MOVIL = 1280;
+    if (canvas.width > ANCHO_MOVIL) {
+      const esc = ANCHO_MOVIL / canvas.width;
+      canvas.width = ANCHO_MOVIL;
+      canvas.height = Math.round(canvas.height * esc);
+      try { E.resize(); } catch (e) { }
+    }
+
+    // menos pinceladas vivas a la vez: cada una es una pasada del shader
+    window.__PPD_MOVIL = true;
+    if (typeof TRAZO !== 'undefined' && TRAZO.R) {
+      TRAZO.R.maxActive = 48;
+      TRAZO.R.perPass = Math.min(TRAZO.R.perPass, 1);
+    }
+  })();
   window.TRAZO = TRAZO;
 
   // API mínima para el modo colaborativo (js/colab.js)
@@ -986,7 +1016,9 @@
   let estadoTxt = 'Arrastrá para pintar';
   function estado(t) {
     estadoTxt = t;
-    document.getElementById('estado').textContent = t;
+    // El pie se sacó del HTML (el usuario no quiere mensajes al pie): si no está, no pasa nada.
+    const el = document.getElementById('estado');
+    if (el) el.textContent = t;
   }
   function limpiar() {
     TRAZO.clear();
@@ -1118,10 +1150,8 @@
       g2.drawImage(document.getElementById('lienzo'), 0, 0);
     }
 
-    if ((++frames % 30) === 0) {
-      document.getElementById('estado').textContent =
-        estadoTxt + ' · ' + TRAZO.emitted + ' pinceladas';
-    }
+    // El contador de pinceladas en la línea de estado se sacó a pedido:
+    // ensuciaba el pie ("preset: ... · 0 pinceladas") y no aporta.
     requestAnimationFrame(loop);
   }
 
@@ -1269,7 +1299,6 @@
     if (!est) return;
     aplicandoGlobal = true;
     try { aplicarEstado(est); } finally { aplicandoGlobal = false; }
-    estado('parámetros globales de la sala');
   }
 
   // ---------- vistas del panel: simple · todos · global · cerrado ----------
@@ -1397,8 +1426,10 @@
   set('light.refrstr', S['light.refrstr']);
   setPaleta(S['color.palette']);
   setPincel(VGPinceles.DEFAULT);
-  // con muchos pinceles automáticos hacen falta más pinceladas concurrentes
-  TRAZO.R.maxActive = 240;
+  // con muchos pinceles automáticos hacen falta más pinceladas concurrentes.
+  // En celular se recorta: cada pincelada viva es una pasada del shader y el
+  // pincel Van Gogh droppeaba mientras se arrastraba el dedo.
+  TRAZO.R.maxActive = window.__PPD_MOVIL ? 48 : 240;
   // capa de ruido del trazo: el slider muestra 20/26, hay que empujarlo al motor
   set('trazo.grano', S['trazo.grano']);
   set('trazo.granoEsc', S['trazo.granoEsc']);

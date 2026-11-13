@@ -5,14 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PUPPERDRAW — lienzo colaborativo</title>
 <meta name="description" content="PUPPERDRAW: lienzo colaborativo de pinceladas. Cada uno pinta con su pincel y su color, y todo se sincroniza en vivo.">
-<link rel="stylesheet" href="css/base.css?v=261113100403">
-<link rel="stylesheet" href="css/estudio.css?v=261113100403">
-<link rel="stylesheet" href="css/colab.css?v=261113100403">
+<link rel="stylesheet" href="css/base.css?v=2611131420">
+<link rel="stylesheet" href="css/estudio.css?v=2611131420">
+<link rel="stylesheet" href="css/colab.css?v=2611131420">
 </head>
 <body data-motor="trazo">
 <canvas id="lienzo" width="1920" height="1080"></canvas>
 <canvas id="campo" width="1920" height="1080"></canvas>
 <div id="cursores" aria-hidden="true"></div>
+
+<!-- QR flotante: se prende desde el menú (sección QR) y queda sobre el lienzo -->
+<div id="qrFlotante" hidden aria-hidden="true"></div>
+<button type="button" id="btnSalirPantalla" hidden title="Salir del modo pantalla (Esc)">✕</button>
 
 <header class="barra">
   <a class="marca" href="./">PUPPER<em>DRAW</em></a>
@@ -22,12 +26,12 @@
     <button type="button" class="colab-bot chat-bot" id="btnChat" title="Abrir el chat de la sala">
       CHAT <b id="colabOnline">1</b>
     </button>
-    <button type="button" class="colab-bot" id="btnQR" title="QR para entrar a esta sala desde el celular">QR</button>
     <button type="button" class="colab-bot cuenta-bot" id="btnCuenta" title="entrar con tu cuenta Fullscreen">LOGIN</button>
     <button type="button" class="colab-bot" id="colabLink" title="Copiar el link de esta sala">COPIAR LINK</button>
     <button type="button" class="colab-bot btn-png" id="btnPng" title="Descargar el lienzo como PNG">↓ PNG</button>
     <button type="button" class="colab-bot btn-fluidos" id="btnFluidos" title="Opciones avanzadas de fluidos: velocidad, arrastre, desliz y vida" aria-label="Opciones avanzadas de fluidos"><span class="rueda">⚙</span><span class="txt">FLUIDOS</span></button>
     <button type="button" class="colab-bot" id="colabLimpiar" title="Borrar el lienzo para todos">LIMPIAR</button>
+    <button type="button" class="colab-bot btn-pantalla" id="btnPantalla" title="Modo pantalla: sólo el lienzo y el QR">⛶ PANTALLA</button>
   </div>
 </header>
 
@@ -223,7 +227,6 @@
 
   <!-- ---------- VISTA 2: parámetros GLOBALES (de toda la sala) ---------- -->
   <div class="vista" data-vista="global" hidden>
-    <p class="desc glo-aviso">Estos parámetros son <b>de la sala</b>: cuando los cambiás, cambian para todos.</p>
 
     <details class="sec" id="secFluidos" open>
       <summary>FLUIDOS</summary>
@@ -237,6 +240,19 @@
           <button type="button" class="sw on" data-act="fluid.vivo" id="btnVivo" title="El pincel suma movimiento al fluido en vez de frenarlo: el liquido sigue corriendo mientras pintás" aria-pressed="true"><i></i><span>FLUIDO VIVO</span></button>
           <button type="button" class="sw" data-act="fluid.dry" id="btnDry" aria-pressed="false"><i></i><span>SECADO</span></button>
         </div>
+      </div>
+    </details>
+
+    <details class="sec" id="secQR">
+      <summary>QR EN PANTALLA</summary>
+      <div class="cuerpo">
+        <div class="toggles">
+          <button type="button" class="sw" data-act="qr.toggle" id="btnQrOn" aria-pressed="false"><i></i><span>MOSTRAR QR</span></button>
+        </div>
+        <label class="campo" title="Posición horizontal del QR sobre el lienzo (0 = izquierda, 100 = derecha)"><span>X</span><input type="range" min="0" max="100" value="82" id="qrX"><input type="text" class="num" id="qrXNum" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+        <label class="campo" title="Posición vertical del QR sobre el lienzo (0 = arriba, 100 = abajo)"><span>Y</span><input type="range" min="0" max="100" value="18" id="qrY"><input type="text" class="num" id="qrYNum" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+        <label class="campo" title="Tamaño del QR"><span>Escala</span><input type="range" min="40" max="250" value="100" id="qrEscala"><input type="text" class="num" id="qrEscalaNum" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+        <p class="desc">El QR lleva a esta misma sala: escanealo con el celular y entrás a pintar. Con <b>⛶ PANTALLA</b> queda sólo el dibujo y el QR, para proyectar.</p>
       </div>
     </details>
 
@@ -483,29 +499,26 @@
   </div>
 </div>
 
-<footer class="pie">
-  <span id="estado">Arrastrá para pintar</span>
-  <span class="ayuda">C limpiar · D secado · F fluido · L luz · P global · Q W E color · [ ] tamaño</span>
-</footer>
 
-<script src="js/config.js?v=261113100403"></script>
-<script src="js/nombres.js?v=261113100403"></script>
-<script src="js/engine/shaders.js?v=261113100403"></script>
-<script src="js/engine/replica.js?v=261113100403"></script>
-<script src="js/flowfield.js?v=261113100403"></script>
-<script src="js/flowwind.js?v=261113100403"></script>
-<script src="js/engine/trazo.js?v=261113100403"></script>
-<script src="js/paletas.js?v=261113100403"></script>
-<script src="js/cuadros.js?v=261113100403"></script>
-<script src="js/imagenes.js?v=261113100403"></script>
-<script src="js/color.js?v=261113100403"></script>
-<script src="js/pinceles.js?v=261113100403"></script>
-<script src="js/presets.js?v=261113100403"></script>
-<script src="js/estudio.js?v=261113100403"></script>
-<script src="js/radial.js?v=261113100403"></script>
+<script src="js/config.js?v=2611131420"></script>
+<script src="js/nombres.js?v=2611131420"></script>
+<script src="js/engine/shaders.js?v=2611131420"></script>
+<script src="js/engine/replica.js?v=2611131420"></script>
+<script src="js/flowfield.js?v=2611131420"></script>
+<script src="js/flowwind.js?v=2611131420"></script>
+<script src="js/engine/trazo.js?v=2611131420"></script>
+<script src="js/paletas.js?v=2611131420"></script>
+<script src="js/cuadros.js?v=2611131420"></script>
+<script src="js/imagenes.js?v=2611131420"></script>
+<script src="js/color.js?v=2611131420"></script>
+<script src="js/pinceles.js?v=2611131420"></script>
+<script src="js/presets.js?v=2611131420"></script>
+<script src="js/estudio.js?v=2611131420"></script>
+<script src="js/radial.js?v=2611131420"></script>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="js/colab.js?v=261113100403"></script>
-<script src="js/cuenta.js?v=261113100403"></script>
+<script src="js/colab.js?v=2611131420"></script>
+<script src="js/cuenta.js?v=2611131420"></script>
+<script src="js/qr-pantalla.js?v=2611131420"></script>
 </body>
 </html>

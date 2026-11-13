@@ -247,25 +247,9 @@
       if (ui.chatLista) ui.chatLista.textContent = '';
       data.chat.forEach(pintarMensaje);
     }
-    const trazos = data.trazos || [];
-    if (trazos.length) {
-      estado('reconstruyendo ' + trazos.length + ' pinceladas…');
-      // de a tandas para no trabar el lienzo
-      let i = 0;
-      const tanda = () => {
-        const fin = Math.min(trazos.length, i + 150);
-        const stamps = [];
-        for (; i < fin; i++) {
-          const t = trazos[i];
-          if (t && t.k === 't') stamps.push(t);
-          else pintarRemoto(t);
-        }
-        if (stamps.length) pintarStamps(stamps);
-        if (i < trazos.length) setTimeout(tanda, 16);
-        else estado('pintando en «' + data.sala + '»');
-      };
-      tanda();
-    }
+    // El lienzo arranca LIMPIO: el dibujo que ya estaba en la sala NO se
+    // reconstruye. Sólo se sincroniza lo que llega a partir de ahora.
+    estado('pintando en «' + data.sala + '»');
   });
 
   socket.on('limpiar', (d) => {

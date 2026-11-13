@@ -678,6 +678,10 @@
       gl.enable(gl.BLEND);
       density.swap(); if (P.isFluid) velocity.swap();
       const tip = brushTips[0];
+      // MULTIDIBUJO: una pincelada remota trae SU color. El tip es uno solo y se
+      // reusa, asi que hay que devolverle el color local al terminar el lote
+      // (si no, el color del otro se le "pega" al pincel de este cliente).
+      const colorPropio = tip.color;
       if (tips && tips.length) {
         // Un pase de pintura escribe un DELTA sobre el buffer de destino y lo
         // calcula leyendo el buffer de lectura. Con un solo tip el original
@@ -711,6 +715,7 @@
       } else {
         density.swap(); if (P.isFluid) velocity.swap();
       }
+      tip.color = colorPropio;   // el pincel local sigue con SU color
       gl.disable(gl.BLEND);
       if (!P.isFluid || P.isPudMode) { copyBlit(density.read, density.write); density.swap(); }
       stepFluidAdvect(dt);
