@@ -83,6 +83,28 @@
         float d = length(p - vec2(0.,clamp(p.y,-moLen,0.)));
         vec4 baseCol = texture2D(uTarget, vUv);
         vec3 base = baseCol.xyz;
+
+      // ---- PINCEL DE IMAGEN ----
+      // Va ANTES del cálculo procedural y SALE con return: si no, la cápsula
+      // del pincel (un disco) recortaba el sello y la imagen quedaba con
+      // máscara circular. Acá la forma la da el ALFA de la imagen y nada más.
+      if (uUseImg > 0.5) {
+        vec2 ppI = (vUv - point) * vec2(aspectRatio, 1.0);
+        float angI = atan(uNoiseAxis.y, uNoiseAxis.x);
+        float caI = cos(-angI), saI = sin(-angI);
+        vec2 qI = vec2(ppI.x * caI - ppI.y * saI, ppI.x * saI + ppI.y * caI);
+        // radius = semiancho del pincel: el sello ocupa el diámetro
+        vec2 uvI = qI / max(radius, 0.0008) * 0.5 + 0.5;
+        if (uvI.x < 0.0 || uvI.x > 1.0 || uvI.y < 0.0 || uvI.y > 1.0) {
+          gl_FragColor = vec4(0.0);
+          return;
+        }
+        vec4 texI = texture2D(uBrushImg, uvI);
+        float mI = clamp(texI.a * brushOpacity, 0.0, 1.0);
+        if (mI <= 0.001) { gl_FragColor = vec4(0.0); return; }
+        gl_FragColor = vec4(texI.rgb - base, mI);
+        return;
+      }
       float intensity = smoothstep(radius,radius-softness,d);
       if(!isFirst)
         intensity-=smoothstep(radius, radius-softness, length(p - vec2(0.,-moLen)));
@@ -148,26 +170,6 @@
         // REPLACE: la pintura nueva pisa la vieja en vez de sumarse (sin acumular relieve)
         col = mix(base, color, clamp(intensity, 0.0, 1.0));
         alpha = mix(baseCol.a, clamp(intensity, 0.0, 1.0), intensity);
-      }
-      // ---- PINCEL DE IMAGEN ----
-      // El sello se ubica en el punto del tip, gira con el eje de la cerda y
-      // toma el tamano del radio: la forma la da el ALFA de la imagen.
-      if (uUseImg > 0.5) {
-        vec2 pp = (vUv - point) * vec2(aspectRatio, 1.0);
-        float ang = atan(uNoiseAxis.y, uNoiseAxis.x);
-        float ca = cos(-ang), sa = sin(-ang);
-        vec2 q = vec2(pp.x * ca - pp.y * sa, pp.x * sa + pp.y * ca);
-        vec2 uvI = q / max(radius * 1.25, 0.0008) * 0.5 + 0.5;
-        float m = 0.0;
-        vec3 imgCol = color;
-        if (uvI.x >= 0.0 && uvI.x <= 1.0 && uvI.y >= 0.0 && uvI.y <= 1.0) {
-          vec4 tex = texture2D(uBrushImg, uvI);
-          m = tex.a * brushOpacity;
-          imgCol = tex.rgb;
-        }
-        m = clamp(m, 0.0, 1.0);
-        col = mix(base, imgCol, m);
-        alpha = max(baseCol.a, min(1.0, baseCol.a + m));
       }
       if(alpha>0.)
         gl_FragColor = vec4(col-base, alpha-baseCol.a);

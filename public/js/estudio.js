@@ -1142,7 +1142,11 @@
         const ajenas = TRAZO.frame();
         const propio = {
           x: tip.x, y: tip.y, dx: tip.dx, dy: tip.dy,
-          rad: Math.max(1, E.radioActual()),
+          // con pincel de imagen el sello sigue el TAMAÑO elegido (1:1 con el slider);
+          // sin imagen se usa el radio real del pincel (tamaño por velocidad)
+          rad: S['pincel.imagen']
+            ? Math.max(8, (E.P && E.P.brushSize ? E.P.brushSize : 0.05) * canvas.height)
+            : Math.max(1, E.radioActual()),
           soft: P.brushSoft,
           opac: P.brushOpacity,
           est: estiloTip(),
