@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PUPPERDRAW — lienzo colaborativo</title>
+<meta name="description" content="PUPPERDRAW: lienzo colaborativo de pinceladas. Cada uno pinta con su pincel y su color, y todo se sincroniza en vivo.">
+<link rel="stylesheet" href="css/base.css?v=261113095022">
+<link rel="stylesheet" href="css/estudio.css?v=261113095022">
+<link rel="stylesheet" href="css/colab.css?v=261113095022">
+</head>
+<body data-motor="trazo">
+<canvas id="lienzo" width="1920" height="1080"></canvas>
+<canvas id="campo" width="1920" height="1080"></canvas>
+<div id="cursores" aria-hidden="true"></div>
+
+<header class="barra">
+  <a class="marca" href="./">PUPPER<em>DRAW</em></a>
+  <div class="colab">
+    <span class="colab-dato" id="colabEstado">conectando…</span>
+    <span class="colab-dato">SALA <b id="colabSala">principal</b></span>
+    <button type="button" class="colab-bot chat-bot" id="btnChat" title="Abrir el chat de la sala">
+      CHAT <b id="colabOnline">1</b>
+    </button>
+    <button type="button" class="colab-bot" id="btnQR" title="QR para entrar a esta sala desde el celular">QR</button>
+    <button type="button" class="colab-bot cuenta-bot" id="btnCuenta" title="entrar con tu cuenta Fullscreen">LOGIN</button>
+    <button type="button" class="colab-bot" id="colabLink" title="Copiar el link de esta sala">COPIAR LINK</button>
+    <button type="button" class="colab-bot btn-png" id="btnPng" title="Descargar el lienzo como PNG">↓ PNG</button>
+    <button type="button" class="colab-bot btn-fluidos" id="btnFluidos" title="Opciones avanzadas de fluidos: velocidad, arrastre, desliz y vida" aria-label="Opciones avanzadas de fluidos"><span class="rueda">⚙</span><span class="txt">FLUIDOS</span></button>
+    <button type="button" class="colab-bot" id="colabLimpiar" title="Borrar el lienzo para todos">LIMPIAR</button>
+  </div>
+</header>
+
+<!-- ================= CHAT DE LA SALA ================= -->
+<aside id="chat" class="chat" hidden>
+  <header class="chat-cab">
+    <b class="chat-tit">CHAT</b>
+    <span class="chat-sala" id="chatSala">principal</span>
+    <span class="chat-on"><b id="chatOnline">1</b> conectados</span>
+    <button type="button" class="chat-x" id="chatCerrar" aria-label="Cerrar el chat" title="Cerrar">✕</button>
+  </header>
+  <div class="chat-quienes" id="chatQuienes"></div>
+  <div class="chat-yo">
+    <span>VOS</span>
+    <input type="text" id="chatNombre" maxlength="24" placeholder="tu nombre" autocomplete="off" spellcheck="false" aria-label="Tu nombre en la sala">
+    <button type="button" id="chatNombreOk" title="Guardar el nombre">OK</button>
+  </div>
+  <div class="chat-lista" id="chatLista"></div>
+  <form class="chat-form" id="chatForm" autocomplete="off">
+    <input type="text" id="chatInput" maxlength="200" placeholder="escribí y Enter…" aria-label="Mensaje">
+    <button type="submit" title="Enviar">↵</button>
+  </form>
+</aside>
+
+<!-- ================= PANEL: PINCEL (cliente) + GLOBAL (sala) ================= -->
+<aside id="panel" class="panel">
+  <button type="button" id="btnCerrarPanel" class="panel-x" title="Cerrar el panel" aria-label="Cerrar panel">✕</button>
+
+  <div class="panel-vistas" id="panelVistas" hidden>
+    <button type="button" class="pv on" data-vista-btn="global">GLOBAL <em>P</em></button>
+    <button type="button" class="pv" data-vista-btn="pincel">← MI PINCEL</button>
+  </div>
+
+  <!-- ---------- VISTA 1: el pincel de cada uno ---------- -->
+  <div class="vista" data-vista="pincel">
+    <div class="bloque bloque-switch">
+      <button type="button" class="sw mini" id="btnTodos" aria-pressed="false" title="Muestra todos los parámetros del pincel y de los colores">
+        <i></i><span>AVANZADO</span>
+      </button>
+    </div>
+
+    <div id="bloqueSimple">
+      <section class="bloque">
+        <span class="rotulo">COLOR</span>
+        <div class="muestras-fila">
+          <div class="muestras" id="muestras"></div>
+          <button type="button" class="mas-color" id="btnMasColor" title="Agregar un color más a la paleta">+</button>
+        </div>
+        <label class="campo solo-base"><span>Color</span><input type="color" id="colorSimple" value="#d93f1e"></label>
+      </section>
+
+      <section class="bloque">
+        <span class="rotulo">PINCEL</span>
+        <label class="campo" title="Escala el largo y el ancho de la pincelada">
+          <span>Tamaño</span>
+          <input type="range" min="30" max="220" step="1" value="100" data-cmd="pincel.tamano">
+          <input type="text" class="num" data-out="pincel.tamano" inputmode="decimal" autocomplete="off">
+        </label>
+      </section>
+
+      <section class="bloque">
+        <span class="rotulo">PRESET</span>
+        <label class="campo">
+          <span>Preset</span>
+          <select id="selPreset"></select>
+        </label>
+      </section>
+    </div>
+
+    <!-- ---------- todos los parámetros del PINCEL y del COLOR ---------- -->
+    <div id="secCompleto" hidden>
+
+      <details class="sec" open>
+        <summary>PINCEL</summary>
+        <div class="cuerpo">
+          <label class="campo">
+            <span>Pincel</span>
+            <select data-cmd="pincel" id="selPincel"></select>
+          </label>
+          <div class="toggles">
+            <button type="button" class="sw on" data-act="tip.speedsize" id="btnSpeedSize" title="Solo para Vervette: el grosor del trazo sigue la velocidad de la mano" aria-pressed="true"><i></i><span>TAMAÑO POR VEL.</span></button>
+          </div>
+          <p class="desc" id="pincelDesc"></p>
+
+          <div class="grupo" data-motor="trazo">
+            <label class="campo"><span>Largo</span><input type="range" min="10" max="220" value="78" data-cmd="trazo.len"><input type="text" class="num" data-out="trazo.len" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo"><span>Ancho</span><input type="range" min="2" max="60" value="15" data-cmd="trazo.wid"><input type="text" class="num" data-out="trazo.wid" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo"><span>Densidad</span><input type="range" min="8" max="150" value="34" data-cmd="trazo.spacing"><input type="text" class="num" data-out="trazo.spacing" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo"><span>Pinceladas</span><input type="range" min="1" max="4" step="1" value="1" data-cmd="trazo.perPass"><input type="text" class="num" data-out="trazo.perPass" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo"><span>Desvío</span><input type="range" min="0" max="100" value="20" data-cmd="trazo.jitter"><input type="text" class="num" data-out="trazo.jitter" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo"><span>Curva</span><input type="range" min="0" max="100" value="35" data-cmd="trazo.bend"><input type="text" class="num" data-out="trazo.bend" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo"><span>Velocidad</span><input type="range" min="2" max="40" value="10" data-cmd="trazo.speed"><input type="text" class="num" data-out="trazo.speed" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo"><span>Cerda</span><input type="range" min="0" max="100" value="100" data-cmd="trazo.bristle"><input type="text" class="num" data-out="trazo.bristle" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo"><span>Veta</span><input type="range" min="10" max="80" value="32" data-cmd="trazo.stretch"><input type="text" class="num" data-out="trazo.stretch" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo"><span>Abanico</span><input type="range" min="0" max="40" value="10" data-cmd="trazo.spread"><input type="text" class="num" data-out="trazo.spread" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo" title="Capa de ruido que multiplica la pincelada (rompe la uniformidad de la mancha)"><span>Ruido</span><input type="range" min="0" max="100" value="35" data-cmd="trazo.grano"><input type="text" class="num" data-out="trazo.grano" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo" title="Frecuencia del ruido: chico = manchas grandes, grande = grano fino"><span>Ruido esc.</span><input type="range" min="2" max="90" value="26" data-cmd="trazo.granoEsc"><input type="text" class="num" data-out="trazo.granoEsc" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+          </div>
+
+          <div class="grupo" data-motor="tip">
+            <label class="campo"><span>Tamaño</span><input type="range" min="1" max="300" value="60" data-cmd="tip.size"><input type="text" class="num" data-out="tip.size" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo"><span>Dureza</span><input type="range" min="1" max="100" value="50" data-cmd="tip.soft"><input type="text" class="num" data-out="tip.soft" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo"><span>Opacidad</span><input type="range" min="0" max="255" value="255" data-cmd="tip.opacity"><input type="text" class="num" data-out="tip.opacity" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo"><span>Materia</span><input type="range" min="-100" max="100" value="50" data-cmd="tip.matter"><input type="text" class="num" data-out="tip.matter" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo" title="Textura de la pintura: 0 = lisa (sin ruido), valores altos = manchas grandes"><span>Textura</span><input type="range" min="0" max="100" value="15" data-cmd="tip.noiseScale"><input type="text" class="num" data-out="tip.noiseScale" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo"><span>Contraste</span><input type="range" min="1" max="100" value="75" data-cmd="tip.noiseContrast"><input type="text" class="num" data-out="tip.noiseContrast" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo"><span>Brillo</span><input type="range" min="0" max="100" value="20" data-cmd="tip.noiseBrightness"><input type="text" class="num" data-out="tip.noiseBrightness" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+          </div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary>COLOR · MODOS</summary>
+        <div class="cuerpo">
+          <label class="campo">
+            <span>Modo</span>
+            <select data-cmd="color.mode">
+              <option value="manual">MANUAL</option>
+              <option value="hue">RANDOM HUE</option>
+              <option value="lerpwhite">LERPT TO WHITE</option>
+              <option value="palette">PALETTE</option>
+              <option value="image">IMAGE</option>
+            </select>
+          </label>
+          <label class="campo solo-base"><span>Color base</span><input type="color" value="#d93f1e" data-cmd="color.base"></label>
+          <div class="grupo" data-solo="lerpwhite">
+            <label class="campo"><span>Ruido</span><input type="range" min="5" max="120" value="42" data-cmd="color.noise"><input type="text" class="num" data-out="color.noise" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo"><span>Velocidad</span><input type="range" min="1" max="40" step="1" value="1" data-cmd="color.lerpspeed"><input type="text" class="num" data-out="color.lerpspeed" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+          </div>
+          <div class="grupo" data-solo="palette">
+            <label class="campo">
+              <span>Paleta</span>
+              <select data-cmd="color.palette" id="selPaleta"></select>
+            </label>
+            <p class="desc" id="paletaObra"></p>
+            <label class="campo"><span>Recorrido</span><input type="range" min="5" max="200" value="32" data-cmd="color.palcycle"><input type="text" class="num" data-out="color.palcycle" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo"><span>Variación</span><input type="range" min="0" max="100" value="18" data-cmd="color.palvar"><input type="text" class="num" data-out="color.palvar" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+          </div>
+          <div class="grupo" data-solo="image">
+            <label class="campo">
+              <span>Imagen</span>
+              <select data-cmd="color.image" id="selCuadro"></select>
+            </label>
+            <p class="desc" id="cuadroObra"></p>
+            <label class="campo"><span>Muestreo</span><input type="range" min="0" max="100" value="0" data-cmd="color.imgradio"><input type="text" class="num" data-out="color.imgradio" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <div class="toggles">
+              <button type="button" class="sw" data-act="imagen.ver" id="btnVer" aria-pressed="false"><i></i><span>VER IMAGEN</span></button>
+              <button type="button" data-act="imagen.subir">SUBIR IMAGEN</button>
+            </div>
+          </div>
+          <div class="grupo" data-solo="hue">
+            <label class="campo"><span>Velocidad</span><input type="range" min="5" max="200" value="35" data-cmd="color.huespeed"><input type="text" class="num" data-out="color.huespeed" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+          </div>
+          <div class="muestras" id="muestras2"></div>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary>PRESETS</summary>
+        <div class="cuerpo">
+          <label class="campo">
+            <span>Nombre</span>
+            <input type="text" id="nombrePreset" maxlength="40" placeholder="trigal al atardecer" autocomplete="off">
+          </label>
+          <div class="toggles toggles-iconos">
+            <button type="button" class="btn-icono" data-preset="guardar" title="Guardar preset (en el servidor)" aria-label="Guardar preset">↓</button>
+            <button type="button" class="btn-icono" data-preset="cargar" title="Cargar el preset elegido" aria-label="Cargar preset">↑</button>
+            <button type="button" class="btn-icono" data-preset="export" title="Exportar los presets a un archivo .json" aria-label="Exportar presets">⤓</button>
+            <button type="button" class="btn-icono" data-preset="import" title="Importar presets desde un archivo .json" aria-label="Importar presets">⤒</button>
+            <button type="button" data-preset="link" title="Copia un link que abre el estudio con TODOS estos parámetros">LINK</button>
+          </div>
+          <div class="toggles">
+            <button type="button" data-preset="default" title="El preset elegido se carga solo al abrir el estudio">SET AS DEFAULT</button>
+          </div>
+          <input type="file" id="filePreset" accept="application/json,.json" hidden>
+          <p class="desc" id="presetMsg"></p>
+        </div>
+      </details>
+
+      <details class="sec">
+        <summary>ACCIONES</summary>
+        <div class="cuerpo">
+          <div class="toggles">
+            <button type="button" data-act="accion.limpiar">LIMPIAR</button>
+            <button type="button" data-act="accion.png">GUARDAR PNG</button>
+            <button type="button" data-act="accion.full">PANTALLA COMPLETA</button>
+          </div>
+        </div>
+      </details>
+
+    </div>
+  </div>
+
+  <!-- ---------- VISTA 2: parámetros GLOBALES (de toda la sala) ---------- -->
+  <div class="vista" data-vista="global" hidden>
+    <p class="desc glo-aviso">Estos parámetros son <b>de la sala</b>: cuando los cambiás, cambian para todos.</p>
+
+    <details class="sec" id="secFluidos" open>
+      <summary>FLUIDOS</summary>
+      <div class="cuerpo">
+        <label class="campo"><span>Velocidad</span><input type="range" min="0" max="100" value="20" data-cmd="fluid.speed"><input type="text" class="num" data-out="fluid.speed" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+        <label class="campo"><span>Arrastre</span><input type="range" min="0" max="99" value="99" data-cmd="fluid.smudge"><input type="text" class="num" data-out="fluid.smudge" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+        <label class="campo"><span>Desliz</span><input type="range" min="0" max="99" value="50" data-cmd="fluid.slip"><input type="text" class="num" data-out="fluid.slip" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+        <label class="campo" title="Vida de las partículas: cuánto sigue corriendo el fluido después de que soltás"><span>Vida</span><input type="range" min="0" max="100" value="50" data-cmd="fluid.life"><input type="text" class="num" data-out="fluid.life" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+        <div class="toggles">
+          <button type="button" class="sw" data-act="fluid.toggle" id="btnFluid" aria-pressed="false"><i></i><span>FLUIDO</span></button>
+          <button type="button" class="sw on" data-act="fluid.vivo" id="btnVivo" title="El pincel suma movimiento al fluido en vez de frenarlo: el liquido sigue corriendo mientras pintás" aria-pressed="true"><i></i><span>FLUIDO VIVO</span></button>
+          <button type="button" class="sw" data-act="fluid.dry" id="btnDry" aria-pressed="false"><i></i><span>SECADO</span></button>
+        </div>
+      </div>
+    </details>
+
+    <details class="sec" open>
+      <summary>LUZ Y MATERIA</summary>
+      <div class="cuerpo">
+        <label class="campo"><span>Brillo</span><input type="range" min="0" max="100" value="75" data-cmd="light.gloss"><input type="text" class="num" data-out="light.gloss" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+        <label class="campo"><span>Relieve</span><input type="range" min="0" max="99" value="50" data-cmd="light.bump"><input type="text" class="num" data-out="light.bump" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+        <div class="toggles">
+          <button type="button" class="sw" data-act="light.toggle" id="btnLight" aria-pressed="false"><i></i><span>LUZ</span></button>
+        </div>
+        <label class="campo" title="ADD acumula la pintura sobre la que ya está; REPLACE la pisa">
+          <span>Mezcla</span>
+          <select data-cmd="paint.blend" id="selBlend">
+            <option value="add">ADD</option>
+            <option value="replace">REPLACE</option>
+          </select>
+        </label>
+        <label class="campo">
+          <span>Materia</span>
+          <select data-cmd="luz.materia" id="selMateria"></select>
+        </label>
+        <label class="campo">
+          <span>Refracción</span>
+          <select data-cmd="luz.refraccion" id="selRefraccion"></select>
+        </label>
+        <label class="campo"><span>Distorsión</span><input type="range" min="0" max="100" value="32" data-cmd="light.refrstr"><input type="text" class="num" data-out="light.refrstr" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+        <div class="toggles">
+          <button type="button" data-act="materia.subir">SUBIR IMAGEN</button>
+        </div>
+        <p class="desc" id="materiaMsg"></p>
+        <input type="file" id="fileCuadro" accept="image/*" hidden>
+      </div>
+    </details>
+
+    <details class="sec" id="secFlowGlobal">
+        <summary>FLUJO</summary>
+        <div class="cuerpo">
+          <!-- ===== MODO DE FLUJO: el campo del cuadro o las corrientes de aire ===== -->
+          <div class="flujo-modo" id="flujoModo" role="tablist" aria-label="Modo de flujo">
+            <button type="button" class="fm on" data-flujo="flowfield" title="El campo sale del tensor de estructura de un cuadro">FLOWFIELD</button>
+            <button type="button" class="fm" data-flujo="flowwind" title="Corrientes de aire turbulentas (K41/K62) que curvan las pinceladas">FLOWWIND</button>
+          </div>
+
+          <div class="flujo-pane" id="paneFlow">
+          <p class="desc">El campo de flujo sale del <b>tensor de estructura</b> de las pinceladas de un cuadro:
+            cada celda apunta hacia donde va el trazo. Encendé AUTOMÁTICO y el lienzo se pinta solo siguiendo
+            ese campo, con el color del cuadro de fondo.</p>
+
+          <div class="sub-grupo">
+            <span class="rotulo">VISUALIZACIÓN</span>
+            <div class="toggles">
+              <button type="button" class="sw" data-act="flow.auto" id="btnFlowAuto" aria-pressed="false"><i></i><span>AUTOMÁTICO</span></button>
+              <button type="button" class="sw" data-act="flow.campo" id="btnFlowCampo" aria-pressed="false"><i></i><span>VER CAMPO</span></button>
+              <button type="button" class="sw" data-act="flow.inter" id="btnFlowInter" aria-pressed="false"><i></i><span>FLUJO INTERACTIVO</span></button>
+              <button type="button" class="sw" data-act="flow.vercob" id="btnFlowCob" aria-pressed="false"><i></i><span>VER COBERTURA</span></button>
+              <button type="button" class="sw" data-act="flow.editar" id="btnFlowEditar" title="Con MODIFICAR encendido, arrastrar sobre el lienzo reescribe el campo en esa zona" aria-pressed="false"><i></i><span>MODIFICAR</span></button>
+            </div>
+            <label class="campo" title="Radio (en píxeles del lienzo) con el que MODIFICAR afecta el campo"><span>Radio</span><input type="range" min="0" max="700" value="150" data-cmd="flow.radio"><input type="text" class="num" data-out="flow.radio" inputmode="decimal" autocomplete="off"></label>
+          </div>
+
+          <div class="sub-grupo">
+            <span class="rotulo">PINCEL AUTOMÁTICO</span>
+            <label class="campo"><span>Pinceles</span><input type="range" min="1" max="1000" value="70" data-cmd="flow.densidad"><input type="text" class="num" data-out="flow.densidad" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo"><span>Velocidad</span><input type="range" min="20" max="300" value="100" data-cmd="flow.velocidad"><input type="text" class="num" data-out="flow.velocidad" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+          </div>
+
+          <div class="sub-grupo">
+            <span class="rotulo">SMART FLOWFIELD</span>
+            <p class="desc" style="margin:0 0 6px">Con esto encendido el campo se abre hacia las zonas que todavía no se pintaron:
+              el recorrido prioriza los huecos y después vuelve al remolino de la obra. Apagado, el campo manda solo.</p>
+            <div class="toggles">
+              <button type="button" class="sw" data-act="flow.smart" id="btnFlowSmart" aria-pressed="false"><i></i><span>SMART FLOWFIELD</span></button>
+            </div>
+            <label class="campo" title="Cuánto pesa el SMART sobre el campo de la obra (0 = solo el cuadro, 100 = va derecho a los huecos)"><span>Fuerza</span><input type="range" min="0" max="100" value="55" data-cmd="flow.smartfuerza"><input type="text" class="num" data-out="flow.smartfuerza" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+          </div>
+
+          <div class="sub-grupo">
+            <span class="rotulo">CAMPO</span>
+            <label class="campo" title="Resolución de la grilla que marca dónde ya se pintó. Más celdas = no quedan huecos"><span>Cobertura</span><input type="range" min="4" max="500" value="32" data-cmd="flow.cobertura"><input type="text" class="num" data-out="flow.cobertura" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo" title="Celdas del campo: pocas = remolinos grandes y suaves; muchas = detalle"><span>Grilla</span><input type="range" min="8" max="400" value="40" data-cmd="flow.grilla"><input type="text" class="num" data-out="flow.grilla" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo" title="Zoom del campo alrededor del centro del cuadro"><span>Escala</span><input type="range" min="30" max="320" value="100" data-cmd="flow.escala"><input type="text" class="num" data-out="flow.escala" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            <label class="campo" title="Cuánto obedece la pincelada al campo (0 = sigue derecho)"><span>Fuerza</span><input type="range" min="0" max="100" value="85" data-cmd="flow.fuerza"><input type="text" class="num" data-out="flow.fuerza" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+          </div>
+
+          <div class="sub-grupo">
+            <span class="rotulo">FONDO <em>(usa el cuadro de COLOR)</em></span>
+            <div class="toggles">
+              <button type="button" class="sw" data-act="flow.fondo" id="btnFlowFondo" aria-pressed="false"><i></i><span>IMAGEN DE FONDO</span></button>
+            </div>
+          </div>
+          <div class="sub-grupo">
+            <span class="rotulo">FLOWFIELD PROPIO</span>
+            <label class="campo">
+              <span>Nombre</span>
+              <input type="text" id="flowNombre" placeholder="mi campo" autocomplete="off">
+              <span></span>
+            </label>
+            <div class="toggles">
+              <button type="button" data-act="flow.guardar">GUARDAR</button>
+              <button type="button" data-act="flow.original">ORIGINAL</button>
+            </div>
+            <label class="campo">
+              <span>Campo</span>
+              <select id="selFlowGuardados"></select>
+            </label>
+            <div class="toggles">
+              <button type="button" data-act="flow.cargar">CARGAR</button>
+              <button type="button" data-act="flow.borrar">BORRAR</button>
+            </div>
+          </div>
+          <p class="desc" id="flowMsg"></p>
+          </div><!-- /paneFlow -->
+
+          <!-- ===== FLOWWIND: corrientes de aire K41 / K62 ===== -->
+          <div class="flujo-pane" id="paneWind" hidden>
+            <p class="desc">Corrientes de aire turbulentas según <b>Kolmogorov (K41)</b> e intermitencia log-normal de
+              <b>Castaing (K62)</b> (Aragón et al., 2006 para <i>La noche estrellada</i>): una cascada de remolinos
+              entre la escala mayor <i>L</i> y la disipación <i>η</i> que curva y arrastra las pinceladas.</p>
+
+            <div class="toggles">
+              <button type="button" class="sw" data-act="flowwind.toggle" id="btnWindToggle" aria-pressed="false"><i></i><span>ACTIVAR</span></button>
+              <button type="button" class="sw" data-act="flowwind.ver" id="btnWindVer" aria-pressed="false"><i></i><span>VER VIENTO</span></button>
+            </div>
+
+            <div class="sub-grupo">
+              <span class="rotulo">CASCADA KOLMOGOROV (K41 / K62)</span>
+              <label class="campo" title="Cuánto obedecen y se curvan las pinceladas con las corrientes de aire"><span>Fuerza</span><input type="range" min="0" max="100" value="65" data-cmd="wind.fuerza"><input type="text" class="num" data-out="wind.fuerza" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+              <label class="campo" title="Tasa media de disipación de energía ε: S₂(R) ∝ (εR)^(2/3)"><span>Energía ε</span><input type="range" min="5" max="100" value="45" data-cmd="wind.epsilon"><input type="text" class="num" data-out="wind.epsilon" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+              <label class="campo" title="Escala mayor L (remolino de inyección, % del alto del lienzo; ~70% en La noche estrellada)"><span>Escala L</span><input type="range" min="20" max="120" value="70" data-cmd="wind.escalaL"><input type="text" class="num" data-out="wind.escalaL" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+              <label class="campo" title="Escala de disipación viscosa η (px): por debajo los remolinos se disipan"><span>Disip. η</span><input type="range" min="6" max="80" value="18" data-cmd="wind.eta"><input type="text" class="num" data-out="wind.eta" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+              <label class="campo" title="Cantidad de octavas/escalas de remolinos en el rango inercial"><span>Cascada</span><input type="range" min="1" max="6" step="1" value="4" data-cmd="wind.octavas"><input type="text" class="num" data-out="wind.octavas" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+              <label class="campo" title="Parámetro λ de Castaing (intermitencia log-normal; 20 = 0.20 en La noche estrellada)"><span>Interm. λ</span><input type="range" min="0" max="50" value="20" data-cmd="wind.lambda"><input type="text" class="num" data-out="wind.lambda" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            </div>
+
+            <div class="sub-grupo">
+              <span class="rotulo">DERIVA Y TIEMPO</span>
+              <label class="campo" title="Corriente de aire base que arrastra los remolinos"><span>Viento</span><input type="range" min="0" max="100" value="20" data-cmd="wind.viento"><input type="text" class="num" data-out="wind.viento" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+              <label class="campo" title="Dirección de la corriente de aire base en grados"><span>Dirección</span><input type="range" min="0" max="360" value="15" data-cmd="wind.angulo"><input type="text" class="num" data-out="wind.angulo" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+              <label class="campo" title="Velocidad de evolución temporal de los remolinos"><span>Velocidad</span><input type="range" min="0" max="200" value="60" data-cmd="wind.velocidad"><input type="text" class="num" data-out="wind.velocidad" inputmode="decimal" autocomplete="off" spellcheck="false"></label>
+            </div>
+          </div><!-- /paneWind -->
+        </div>
+      </details>
+
+  </div>
+</aside>
+
+<button type="button" id="btnAbrirPanel" class="fab" title="Abrir el panel" aria-label="Abrir panel">⚙</button>
+
+<!-- ================= PANEL RÁPIDO (mantener apretado en el lienzo) ================= -->
+<!-- carga circular del long press: se llena mientras mantenés y abre el panel -->
+<div id="radialCarga" class="radial-carga" hidden aria-hidden="true">
+  <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="21"></circle></svg>
+</div>
+
+<aside id="radial" class="radial" hidden>
+  <header class="radial-cab" id="radialCab">
+    <span class="radial-tit">PINCEL</span>
+    <button type="button" id="radialCerrar" class="radial-x" title="Cerrar" aria-label="Cerrar">✕</button>
+  </header>
+  <div class="radial-cuerpo">
+    <span class="rotulo">COLOR</span>
+    <div class="radial-colores" id="radialColores"></div>
+    <label class="campo" title="Elegir cualquier color">
+      <span>Otro</span>
+      <input type="color" id="radialColor" value="#a83090">
+    </label>
+    <label class="campo" title="Tamaño de la pincelada (largo y ancho)">
+      <span>Pincel</span>
+      <input type="range" min="30" max="220" step="1" value="100" data-cmd="pincel.tamano">
+      <input type="text" class="num" data-out="pincel.tamano" inputmode="decimal" autocomplete="off">
+    </label>
+    <label class="campo" title="Densidad de siembra: más bajo = pinceladas más separadas">
+      <span>Densidad</span>
+      <input type="range" min="8" max="150" step="1" value="34" data-cmd="trazo.spacing">
+      <input type="text" class="num" data-out="trazo.spacing" inputmode="decimal" autocomplete="off">
+    </label>
+    <label class="campo" title="Opacidad / fuerza de la pintura">
+      <span>Fuerza</span>
+      <input type="range" min="5" max="100" step="1" value="100" data-cmd="pincel.fuerza">
+      <input type="text" class="num" data-out="pincel.fuerza" inputmode="decimal" autocomplete="off">
+    </label>
+    <span class="rotulo">PINCELES</span>
+    <div class="radial-pinceles" id="radialPinceles"></div>
+  </div>
+</aside>
+
+<!-- ================= PERFIL (dibujos e imágenes) ================= -->
+<div id="perfil" class="modal" hidden>
+  <div class="modal-caja perfil-caja">
+    <header class="modal-cab">
+      <img id="perfilAvatar" class="perfil-avatar" alt="">
+      <div class="perfil-datos">
+        <b id="perfilNombre">—</b>
+        <i id="perfilMail"></i>
+      </div>
+      <button type="button" id="perfilSalir" class="modal-bot chico" title="Cerrar sesión">SALIR</button>
+      <button type="button" id="perfilCerrar" class="modal-x" title="Cerrar">✕</button>
+    </header>
+    <div class="perfil-tabs">
+      <button type="button" class="ptab on" data-perfil-tab="dibujos">MIS DIBUJOS</button>
+      <button type="button" class="ptab" data-perfil-tab="imagenes">MIS IMÁGENES</button>
+      <span class="perfil-acciones">
+        <input type="text" id="perfilNombreDibujo" class="perfil-nombre" maxlength="60" placeholder="nombre del dibujo" autocomplete="off">
+        <button type="button" id="perfilGuardarDibujo" class="modal-bot">GUARDAR LIENZO</button>
+        <button type="button" id="perfilSubirImagen" class="modal-bot chico">SUBIR IMAGEN</button>
+      </span>
+    </div>
+    <div class="perfil-grilla" id="perfilGrilla"></div>
+    <p class="desc" id="perfilMsg"></p>
+    <input type="file" id="perfilFile" accept="image/*" hidden>
+  </div>
+</div>
+
+<!-- ================= QR DE LA SALA ================= -->
+<div id="qrPanel" class="modal" hidden>
+  <div class="modal-caja qr-caja">
+    <header class="modal-cab">
+      <b>ENTRÁ A ESTA SALA</b>
+      <button type="button" id="qrCerrar" class="modal-x" title="Cerrar">✕</button>
+    </header>
+    <div class="qr-img" id="qrImg"></div>
+    <p class="qr-link" id="qrLink"></p>
+    <p class="desc">Escaneá con el celular y quedás en la misma sala.</p>
+  </div>
+</div>
+
+<!-- ================= PNG DEL LIENZO ================= -->
+<!-- En el celular el archivo no siempre baja solo: se muestra la imagen para
+     guardarla con long press (Guardar en Fotos / Descargar imagen). -->
+<div id="hojaPng" class="modal" hidden>
+  <div class="modal-caja hoja-png">
+    <header class="modal-cab">
+      <b>PNG DEL LIENZO</b>
+      <button type="button" id="hojaPngX" class="modal-x" title="Cerrar">✕</button>
+    </header>
+    <img id="hojaPngImg" alt="El lienzo como imagen PNG">
+    <p class="desc">En el celular: mantené apretada la imagen y elegí <b>Guardar en Fotos</b> o <b>Descargar imagen</b>.</p>
+    <div class="hoja-png-botones">
+      <a id="hojaPngBajar" class="modal-bot" download="pupperdraw.png">DESCARGAR</a>
+      <button type="button" id="hojaPngCerrar" class="modal-bot chico">CERRAR</button>
+    </div>
+  </div>
+</div>
+
+<footer class="pie">
+  <span id="estado">Arrastrá para pintar</span>
+  <span class="ayuda">C limpiar · D secado · F fluido · L luz · P global · Q W E color · [ ] tamaño</span>
+</footer>
+
+<script src="js/config.js?v=261113095022"></script>
+<script src="js/nombres.js?v=261113095022"></script>
+<script src="js/engine/shaders.js?v=261113095022"></script>
+<script src="js/engine/replica.js?v=261113095022"></script>
+<script src="js/flowfield.js?v=261113095022"></script>
+<script src="js/flowwind.js?v=261113095022"></script>
+<script src="js/engine/trazo.js?v=261113095022"></script>
+<script src="js/paletas.js?v=261113095022"></script>
+<script src="js/cuadros.js?v=261113095022"></script>
+<script src="js/imagenes.js?v=261113095022"></script>
+<script src="js/color.js?v=261113095022"></script>
+<script src="js/pinceles.js?v=261113095022"></script>
+<script src="js/presets.js?v=261113095022"></script>
+<script src="js/estudio.js?v=261113095022"></script>
+<script src="js/radial.js?v=261113095022"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="js/colab.js?v=261113095022"></script>
+<script src="js/cuenta.js?v=261113095022"></script>
+</body>
+</html>

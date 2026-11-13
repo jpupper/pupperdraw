@@ -1,0 +1,438 @@
+/* =====================================================================
+   colab.css — barra de sesión colaborativa y cursores de los demás
+   ===================================================================== */
+
+.colab {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  pointer-events: auto;
+}
+
+.colab-dato {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--mut, #8b8880);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.colab-dato b {
+  color: var(--fg, #f2efe9);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.colab-quienes {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  max-width: 42vw;
+  overflow: hidden;
+}
+
+.colab-quienes .quien {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: #cfcbc2;
+  white-space: nowrap;
+}
+
+.colab-quienes .quien::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c, #f5c518);
+  box-shadow: 0 0 6px var(--c, #f5c518);
+}
+
+.colab-bot {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #cfcbc2;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+
+.colab-bot:hover {
+  color: var(--acc, #f5c518);
+  border-color: var(--acc, #f5c518);
+  background: rgba(245, 197, 24, 0.08);
+}
+
+/* ---------- cursores ajenos ---------- */
+#cursores {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 15;
+  overflow: hidden;
+}
+
+.cursor-otro {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(-100px, -100px);
+  opacity: 0;
+  transition: opacity .25s;
+  will-change: transform;
+}
+
+.cursor-otro i {
+  display: block;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: var(--c, #f5c518);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.55), 0 0 12px var(--c, #f5c518);
+}
+
+.cursor-otro span {
+  position: absolute;
+  left: 10px;
+  top: -6px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--c, #f5c518);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+}
+
+/* ==================================================================
+   CHAT DE LA SALA (barra de arriba + panel a la izquierda)
+   ================================================================== */
+.colab-bot.chat-bot { display: inline-flex; align-items: center; gap: 5px; }
+.colab-bot.chat-bot b { color: var(--acc); }
+.colab-bot.chat-bot.on { color: #12120f; background: var(--acc); border-color: var(--acc); }
+.colab-bot.chat-bot.on b { color: #12120f; }
+
+.chat {
+  position: fixed; top: var(--barra-h, 54px); left: 12px; bottom: 44px; width: 300px; z-index: 32;
+  display: flex; flex-direction: column;
+  background: var(--panel); border: 1px solid var(--borde); border-radius: var(--radio);
+  backdrop-filter: blur(8px); overflow: hidden;
+}
+.chat[hidden] { display: none; }
+.chat-cab {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-bottom: 1px solid var(--borde);
+  font-size: 10px; letter-spacing: 0.12em;
+}
+.chat-tit { color: var(--acc); letter-spacing: 0.18em; }
+.chat-sala { color: #cfcbc2; text-transform: uppercase; }
+.chat-on { color: var(--mut); margin-left: auto; }
+.chat-on b { color: var(--acc); }
+.chat-x {
+  width: 22px; height: 22px; padding: 0; margin-left: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; line-height: 1;
+  color: #cfcbc2; background: rgba(40, 40, 48, 0.85);
+  border: 1px solid var(--borde); border-radius: 50%; cursor: pointer;
+}
+.chat-x:hover { color: #fff; border-color: #4a4a56; }
+
+.chat-quienes {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  padding: 6px 8px; border-bottom: 1px solid var(--borde);
+}
+.chat-quien {
+  font-size: 9.5px; letter-spacing: 0.04em; padding: 2px 7px;
+  border-radius: 999px; background: rgba(255, 255, 255, 0.04); color: #d8d4cb;
+}
+.chat-quien::before {
+  content: ""; display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; background: var(--c, #f5c518);
+  margin-right: 5px; vertical-align: middle;
+}
+
+.chat-lista {
+  flex: 1; overflow-y: auto; overscroll-behavior: contain;
+  padding: 8px; display: flex; flex-direction: column; gap: 6px;
+  font-size: 11.5px; line-height: 1.35;
+}
+.chat-lista::-webkit-scrollbar { width: 7px; }
+.chat-lista::-webkit-scrollbar-thumb { background: #34343d; border-radius: 4px; }
+/* formato de mensaje igual al chat de pizarraia: un bloque por mensaje con
+   el nombre en color y el texto al lado */
+.chat-msg {
+  display: block; padding: 5px 8px; margin-bottom: 6px;
+  background: rgba(255, 255, 255, .035); border-radius: 6px; line-height: 1.4;
+}
+.chat-msg b { font-size: 10.5px; color: var(--c, var(--acc)); margin-right: 5px; }
+.chat-msg span { color: #e7e3da; word-break: break-word; }
+.chat-msg i { float: right; font-style: normal; font-size: 8.5px; color: #6f6c66; }
+.chat-msg.mio { background: rgba(245, 197, 24, .07); }
+.chat-msg.mio span { color: #fff; }
+
+.chat-form { display: flex; gap: 6px; padding: 8px; border-top: 1px solid var(--borde); }
+.chat-form input {
+  flex: 1; min-width: 0; padding: 6px 8px; font-size: 11.5px;
+  background: #0006; border: 1px solid var(--borde); border-radius: 6px; outline: none;
+}
+.chat-form input:focus { border-color: rgba(245, 197, 24, 0.55); background: rgba(245, 197, 24, 0.06); }
+.chat-form button {
+  width: 34px; flex: 0 0 34px; font-weight: 700; cursor: pointer;
+  background: var(--acc); color: #12120f; border: 0; border-radius: 6px;
+}
+
+@media (max-width: 760px) {
+  .chat { left: 8px; right: 8px; width: auto; }
+  .colab-quienes { display: none; }
+  .colab-dato:nth-child(1) { display: none; }
+  /* En el celular la barra NO entra en una fila: se envuelve en dos (marca arriba,
+     botones abajo). El alto real lo mide estudio.js y lo deja en --barra-h para que
+     el panel y el chat no queden tapados. Antes se desbordaba y ↓ PNG quedaba
+     fuera de pantalla: por eso "en el celular no se podía descargar". */
+  .barra { gap: 4px 8px; padding: 5px 10px 6px; }
+  .marca { font-size: 11px; }
+  .colab { gap: 5px; width: 100%; justify-content: flex-start; }
+  .colab-bot { padding: 5px 9px; font-size: 9px; }
+  .colab-bot.btn-fluidos { padding: 4px 9px; }
+  .colab-bot.btn-fluidos .txt { display: none; }
+  .colab-bot.btn-fluidos .rueda { font-size: 15px; }
+  /* el pie: los atajos de teclado no sirven en el celular, queda sólo el estado */
+  .pie .ayuda { display: none; }
+  .pie { font-size: 10px; }
+}
+
+/* La barra se envuelve sola cuando no entra (tablet, celular): antes se desbordaba
+   en silencio y los últimos botones quedaban fuera de pantalla. El alto real lo
+   publica estudio.js en --barra-h, que usan el panel y el chat. */
+.barra {
+  height: auto; min-height: 46px;
+  flex-wrap: wrap; align-items: center;
+  gap: 4px 10px;
+}
+.colab { flex-wrap: wrap; justify-content: flex-end; }
+
+/* ==================================================================
+   CUENTA (login FSC) · PERFIL · QR
+   ================================================================== */
+.cuenta-bot { display: inline-flex; align-items: center; gap: 6px; }
+.cuenta-bot img {
+  width: 18px; height: 18px; border-radius: 50%; object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, .35);
+}
+.cuenta-bot.con-sesion { color: var(--fg); border-color: rgba(245, 197, 24, .45); }
+.cuenta-bot.con-sesion span { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.modal {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(4, 4, 6, .72); backdrop-filter: blur(3px);
+}
+.modal[hidden] { display: none; }
+.modal-caja {
+  background: var(--panel); border: 1px solid var(--borde); border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .6);
+  max-height: 86vh; overflow: auto;
+}
+.modal-cab {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-bottom: 1px solid var(--borde);
+  font-size: 11px; letter-spacing: .12em; color: var(--acc); font-weight: 700;
+}
+.modal-cab b { letter-spacing: .12em; }
+.modal-x {
+  margin-left: auto; width: 24px; height: 24px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: #cfcbc2; background: rgba(40, 40, 48, .85);
+  border: 1px solid var(--borde); border-radius: 50%; cursor: pointer;
+}
+.modal-x:hover { color: #fff; border-color: #4a4a56; }
+.modal-bot {
+  padding: 5px 10px; border-radius: 6px; cursor: pointer;
+  font-size: 9.5px; letter-spacing: .1em; font-weight: 700;
+  color: #12120f; background: var(--acc); border: 0;
+}
+.modal-bot.chico { background: rgba(255, 255, 255, .06); color: var(--fg); border: 1px solid var(--borde); }
+
+/* perfil */
+.perfil-caja { width: min(760px, 94vw); }
+.perfil-avatar {
+  width: 34px; height: 34px; border-radius: 50%; object-fit: cover;
+  border: 1px solid var(--borde); background: #000;
+}
+.perfil-datos { display: flex; flex-direction: column; line-height: 1.25; }
+.perfil-datos b { color: var(--fg); font-size: 13px; letter-spacing: 0; }
+.perfil-datos i { font-style: normal; font-size: 10px; color: var(--mut); letter-spacing: .04em; }
+.perfil-tabs {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px; border-bottom: 1px solid var(--borde); flex-wrap: wrap;
+}
+.ptab {
+  padding: 5px 10px; border-radius: 999px; cursor: pointer;
+  font-size: 9.5px; letter-spacing: .1em; font-weight: 700;
+  color: #9d9a93; background: rgba(255, 255, 255, .03); border: 1px solid var(--borde);
+}
+.ptab.on { color: #12120f; background: var(--acc); border-color: var(--acc); }
+.perfil-acciones { margin-left: auto; display: flex; gap: 6px; }
+.perfil-grilla {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px; padding: 12px; min-height: 180px;
+}
+.perfil-item {
+  background: rgba(255, 255, 255, .03); border: 1px solid var(--borde);
+  border-radius: 8px; overflow: hidden;
+}
+.perfil-item img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #000; }
+.perfil-pie { display: flex; align-items: center; gap: 6px; padding: 5px 7px; font-size: 10px; }
+.perfil-pie span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #d8d4cb; }
+.perfil-pie a, .perfil-pie button {
+  background: none; border: 0; color: var(--mut); cursor: pointer;
+  font-size: 12px; line-height: 1; padding: 2px 3px;
+}
+.perfil-pie a:hover, .perfil-pie button:hover { color: var(--acc); }
+.perfil-vacio { grid-column: 1 / -1; color: var(--mut); font-size: 11.5px; text-align: center; padding: 30px 0; margin: 0; }
+#perfilMsg { padding: 0 12px 10px; margin: 0; }
+
+/* QR */
+.qr-caja { width: min(340px, 92vw); text-align: center; }
+.qr-img { padding: 14px 14px 4px; }
+.qr-img svg { width: 100%; height: auto; display: block; border-radius: 6px; background: #fff; }
+.qr-link {
+  font-size: 10px; color: var(--mut); word-break: break-all;
+  padding: 0 16px; margin: 6px 0;
+}
+.qr-caja .desc { padding: 0 16px 14px; margin: 0; }
+
+/* ==================================================================
+   PANEL RÁPIDO (long press en el lienzo) — se arrastra desde la barra
+   ================================================================== */
+.radial {
+  position: fixed; z-index: 50; width: 236px;
+  background: var(--panel); border: 1px solid var(--borde); border-radius: 12px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .62); backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+.radial[hidden] { display: none; }
+.radial-cab {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 9px; border-bottom: 1px solid var(--borde);
+  cursor: grab; touch-action: none; user-select: none;
+  background: linear-gradient(180deg, rgba(40, 40, 48, .9), rgba(24, 24, 30, .9));
+}
+.radial-cab:active { cursor: grabbing; }
+.radial-tit { font-size: 9.5px; letter-spacing: .16em; color: var(--acc); font-weight: 700; }
+.radial-x {
+  margin-left: auto; width: 20px; height: 20px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: #cfcbc2; background: rgba(40, 40, 48, .85);
+  border: 1px solid var(--borde); border-radius: 50%; cursor: pointer;
+}
+.radial-cuerpo { padding: 8px; }
+/* paleta de colores del panel rápido */
+.radial-colores { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 6px; }
+.radial-color {
+  width: 22px; height: 22px; padding: 0; border-radius: 5px; cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, .22); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .25);
+}
+.radial-color.on { outline: 2px solid var(--acc); outline-offset: 1px; border-color: #000; }
+.radial-cuerpo input[type="color"] {
+  width: 34px; height: 22px; padding: 0; border: 1px solid var(--borde);
+  border-radius: 5px; background: none; cursor: pointer;
+}
+
+/* carga circular del long press */
+.radial-carga {
+  position: fixed; z-index: 60; width: 54px; height: 54px;
+  margin: -27px 0 0 -27px; pointer-events: none;
+}
+.radial-carga[hidden] { display: none; }
+.radial-carga svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.radial-carga circle {
+  fill: none; stroke: var(--acc); stroke-width: 3.5; stroke-linecap: round;
+  stroke-dasharray: 132; stroke-dashoffset: 132;
+}
+.radial-carga.on circle { transition: stroke-dashoffset 520ms linear; stroke-dashoffset: 0; }
+.radial-pinceles { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.radial-pincel {
+  padding: 4px 7px; border-radius: 999px; cursor: pointer;
+  font-size: 9px; letter-spacing: .06em;
+  color: #b9b5ac; background: rgba(255, 255, 255, .04); border: 1px solid var(--borde);
+}
+.radial-pincel.on { color: #12120f; background: var(--acc); border-color: var(--acc); font-weight: 700; }
+
+/* "+" de la paleta */
+.muestras-fila { display: flex; align-items: center; gap: 6px; }
+.muestras-fila .muestras { flex: 1; }
+.mas-color {
+  width: 26px; height: 26px; flex: 0 0 26px; padding: 0;
+  font-size: 16px; line-height: 1; font-weight: 700;
+  color: var(--acc); background: rgba(245, 197, 24, .08);
+  border: 1px dashed rgba(245, 197, 24, .5); border-radius: 6px; cursor: pointer;
+}
+.mas-color:hover { background: rgba(245, 197, 24, .18); }
+
+.colab-bot.btn-png {
+  color: var(--acc);
+  border-color: rgba(245, 197, 24, 0.45);
+  background: rgba(245, 197, 24, 0.10);
+}
+.colab-bot.btn-png:hover { background: rgba(245, 197, 24, 0.22); }
+
+/* la ruedita de FLUIDOS: abre los globales de la sala en la sección FLUIDOS */
+.colab-bot.btn-fluidos {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--acc);
+  border-color: rgba(245, 197, 24, 0.45);
+  background: rgba(245, 197, 24, 0.10);
+}
+.colab-bot.btn-fluidos:hover { background: rgba(245, 197, 24, 0.22); }
+.colab-bot.btn-fluidos .rueda {
+  display: inline-block; font-size: 13px; line-height: 1;
+  transition: transform .45s ease;
+}
+.colab-bot.btn-fluidos:hover .rueda { transform: rotate(120deg); }
+
+/* hoja del PNG: en el celular el archivo no baja solo, se guarda con long press */
+.hoja-png { width: min(560px, 94vw); display: flex; flex-direction: column; }
+.hoja-png img {
+  display: block; width: 100%; max-height: 56vh; object-fit: contain;
+  background: #000; border-bottom: 1px solid var(--borde);
+}
+.hoja-png .desc { padding: 8px 12px 0; margin: 0 0 10px; }
+.hoja-png-botones { display: flex; gap: 8px; padding: 0 12px 12px; }
+.hoja-png-botones .modal-bot {
+  display: inline-flex; align-items: center; text-decoration: none; cursor: pointer;
+}
+.hoja-png-botones .modal-bot.chico { background: rgba(255, 255, 255, .06); color: var(--fg); border: 1px solid var(--borde); }
+
+/* ==================================================================
+   NOMBRE EN EL CHAT + nombre del dibujo (inputs propios, sin diálogos)
+   ================================================================== */
+.chat-yo {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 8px; border-bottom: 1px solid var(--borde);
+}
+.chat-yo span { font-size: 9px; letter-spacing: .12em; color: var(--mut); }
+.chat-yo input {
+  flex: 1; min-width: 0; padding: 4px 6px; font-size: 11px; color: var(--fg);
+  background: #0006; border: 1px solid var(--borde); border-radius: 5px; outline: none;
+}
+.chat-yo input:focus { border-color: rgba(245, 197, 24, .55); }
+.chat-yo button {
+  padding: 4px 8px; font-size: 9px; font-weight: 700; letter-spacing: .08em;
+  color: #12120f; background: var(--acc); border: 0; border-radius: 5px; cursor: pointer;
+}
+
+.perfil-nombre {
+  width: 165px; padding: 5px 8px; font-size: 11px; color: var(--fg);
+  background: #0006; border: 1px solid var(--borde); border-radius: 6px; outline: none;
+}
+.perfil-nombre:focus { border-color: rgba(245, 197, 24, .55); }
+
+/* confirmación en dos pasos: el botón se pone en rojo y espera el segundo click */
+.perfil-pie button.confirmar { color: #ff8a7a; font-weight: 700; }
+.toggles button.confirmar { color: #ff8a7a; border-color: rgba(255, 138, 122, .55); }

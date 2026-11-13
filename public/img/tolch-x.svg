@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 132 26" fill="none" role="img" aria-label="Tolch.X">
+  <rect x="0" y="3" width="20" height="20" rx="5" stroke="#f5c518" stroke-width="1.6"/>
+  <path d="M6.2 9h7.6M10 9v8.6" stroke="#f5c518" stroke-width="1.6" stroke-linecap="round"/>
+  <text x="28" y="19.5" font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="700" letter-spacing="1.4" fill="#e9e6df">TOLCH<tspan fill="#f5c518">.X</tspan></text>
+</svg>

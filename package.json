@@ -1,0 +1,21 @@
+{
+  "name": "pupperdraw",
+  "private": true,
+  "version": "1.0.0",
+  "description": "PUPPERDRAW — lienzo colaborativo de pinceladas (FSC)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.9",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.11.4",
+    "socket.io": "^4.7.5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
