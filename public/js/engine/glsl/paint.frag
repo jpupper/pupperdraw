@@ -102,7 +102,10 @@
         vec4 texI = texture2D(uBrushImg, uvI);
         float mI = clamp(texI.a * brushOpacity, 0.0, 1.0);
         if (mI <= 0.001) { gl_FragColor = vec4(0.0); return; }
-        gl_FragColor = vec4(texI.rgb - base, mI);
+        // El delta de color va PREMULTIPLICADO por la máscara: si se manda el
+        // color pleno, en los bordes anti-aliasados (alfa chico) el negro del PNG
+        // se suma igual y queda un filo negro alrededor del sello.
+        gl_FragColor = vec4((mix(base, texI.rgb, mI) - base), mI);
         return;
       }
       float intensity = smoothstep(radius,radius-softness,d);

@@ -989,6 +989,20 @@
     TRAZO.onDown(p.x, p.y);
     tip.x = p.x; tip.y = p.y; tip.dx = 0; tip.dy = 0;
     P.isFirstDown = true; tip.moved = false;
+
+    // PINCEL DE IMAGEN: un click solo (sin arrastre) también deja el sello.
+    // El motor pinta cuando hay movimiento; acá se fuerza el primer punto.
+    if (S['pincel.imagen']) {
+      const rad = Math.max(8, (E.P && E.P.brushSize ? E.P.brushSize : 0.05) * canvas.height * 4);
+      E.frame([{
+        x: p.x, y: p.y, dx: 0, dy: 0,
+        rad: rad, soft: P.brushSoft, opac: P.brushOpacity,
+        est: estiloTip(), first: true, hand: 0
+      }], 1);
+      if (window.COLAB && typeof window.COLAB.stamp === 'function') {
+        window.COLAB.stamp({ x: p.x, y: p.y, dx: 0, dy: 0, r: rad, s: P.brushSoft, o: P.brushOpacity, f: 1, e: estiloTip(), c: (E.P.Col || [1, 1, 1]).slice(0, 3) });
+      }
+    }
   });
 
   canvas.addEventListener('pointermove', ev => {
@@ -1144,8 +1158,9 @@
           x: tip.x, y: tip.y, dx: tip.dx, dy: tip.dy,
           // con pincel de imagen el sello sigue el TAMAÑO elegido (1:1 con el slider);
           // sin imagen se usa el radio real del pincel (tamaño por velocidad)
+          // con pincel de imagen el sello sigue el TAMAÑO elegido y llega a x4
           rad: S['pincel.imagen']
-            ? Math.max(8, (E.P && E.P.brushSize ? E.P.brushSize : 0.05) * canvas.height)
+            ? Math.max(8, (E.P && E.P.brushSize ? E.P.brushSize : 0.05) * canvas.height * 4)
             : Math.max(1, E.radioActual()),
           soft: P.brushSoft,
           opac: P.brushOpacity,

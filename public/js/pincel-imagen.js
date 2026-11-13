@@ -108,15 +108,18 @@
     });
   }
 
-  // recorte central cuadrado a 200x200 (lo que viaja y se guarda)
+  // La imagen entra COMPLETA en el lienzo de 200x200 (sin recortar): si no es
+  // cuadrada quedan franjas transparentes y así conserva su proporción real.
   function recortar200(img) {
     const c = document.createElement('canvas');
     c.width = LADO; c.height = LADO;
     const g = c.getContext('2d');
-    const lado = Math.min(img.width || img.naturalWidth, img.height || img.naturalHeight);
-    const sx = ((img.width || img.naturalWidth) - lado) / 2;
-    const sy = ((img.height || img.naturalHeight) - lado) / 2;
-    g.drawImage(img, sx, sy, lado, lado, 0, 0, LADO, LADO);
+    const w = img.width || img.naturalWidth;
+    const h = img.height || img.naturalHeight;
+    const k = Math.min(LADO / w, LADO / h);
+    const dw = Math.max(1, Math.round(w * k));
+    const dh = Math.max(1, Math.round(h * k));
+    g.drawImage(img, Math.round((LADO - dw) / 2), Math.round((LADO - dh) / 2), dw, dh);
     return c.toDataURL('image/png');
   }
 
