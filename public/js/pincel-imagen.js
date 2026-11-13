@@ -107,9 +107,14 @@
   function elegir(id, nombre) {
     sel = id || null;
     if (sel) modo = 'imagen';
+    // al soltar la imagen, el modo vuelve al pincel que está puesto (si no, los
+    // chips del panel seguían diciendo IMAGEN con la lista vacía)
+    else if (modo === 'imagen') modo = (document.body.dataset.motor === 'trazo') ? 'vangogh' : 'vervette';
     if (window.PPD && PPD.imagenPincel) PPD.imagenPincel(sel);
     pintarLista();
     pintarModos();
+    // el panel rápido (radial.js) muestra la misma lista: se avisa el cambio
+    document.dispatchEvent(new CustomEvent('ppd-pincel-imagen'));
     if (!sel) { aviso('pincel normal'); return; }
     const p = lista.find(x => x.id === sel);
     aviso('pincel: ' + ((p && p.nombre) || nombre || sel));
@@ -156,13 +161,13 @@
   }
 
   async function subir(file) {
-    if (!file) return;
+    if (!file) return false;
     aviso('preparando la imagen…');
     let png;
     try {
       const img = await leerArchivo(file);
       png = recortar200(img);
-    } catch (e) { aviso('no pude leer esa imagen'); return; }
+    } catch (e) { aviso('no pude leer esa imagen'); return false; }
 
     try {
       const r = await fetch(API + '/api/pinceles', {
@@ -171,13 +176,15 @@
         body: JSON.stringify({ nombre: (file.name || 'imagen').slice(0, 40), png: png })
       });
       const d = await r.json();
-      if (!d || !d.ok) { aviso('no pude subir la imagen' + (d && d.error ? ': ' + d.error : '')); return; }
+      if (!d || !d.ok) { aviso('no pude subir la imagen' + (d && d.error ? ': ' + d.error : '')); return false; }
       await registrar(d.pincel);
       lista.unshift(d.pincel);
       pintarLista();
       elegir(d.pincel.id, d.pincel.nombre);
+      return true;
     } catch (e) {
       aviso('no pude subir la imagen (sin conexión con el servidor)');
+      return false;
     }
   }
 
@@ -198,7 +205,9 @@
     lista: () => lista.slice(),
     elegido: () => sel,
     recargar: traerLista,
-    elegir: elegir
+    elegir: elegir,
+    // subir un archivo desde otro panel (el rápido): devuelve true si quedó
+    subir: (file) => subir(file)
   };
 
   pintarModos();

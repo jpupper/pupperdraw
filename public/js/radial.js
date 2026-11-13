@@ -80,6 +80,78 @@
     });
   }
 
+  // ---------- pincel con imagen ----------
+  // Las imágenes subidas viven en el servidor (las sirve /api/pincel/img/<id>.png)
+  // y la lista la maneja pincel-imagen.js (PPDPinceles). Acá sólo se elige y se sube:
+  // elegir una imagen pasa al pincel continuo (Vervette), que es el que estampa.
+  const listaImg = $('radialPincelesImg');
+  const estadoImg = $('radialImgEstado');
+  const inputImg = $('radialInputImagen');
+  const btnImg = $('radialSubirImagen');
+
+  const apiImg = () => (window.CONFIG && CONFIG.API_URL) || (location.origin + '/pupperdraw');
+  const avisoImg = (t) => { if (estadoImg) estadoImg.textContent = t; };
+
+  function pintarImagenes() {
+    if (!listaImg) return;
+    const P = window.PPDPinceles;
+    const items = (P && P.lista) ? P.lista() : [];
+    const sel = (P && P.elegido) ? P.elegido() : null;
+    listaImg.textContent = '';
+    items.forEach((p) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'muestra img-pincel' + (sel === p.id ? ' on' : '');
+      b.dataset.imagen = p.id;
+      b.title = (p.nombre || 'imagen') + ' — tocá para pintar con esta imagen';
+      b.setAttribute('aria-pressed', sel === p.id ? 'true' : 'false');
+      const im = document.createElement('img');
+      im.alt = p.nombre || 'pincel';
+      im.src = apiImg() + '/api/pincel/img/' + p.id + '.png';
+      im.loading = 'lazy';
+      b.appendChild(im);
+      listaImg.appendChild(b);
+    });
+    if (!items.length) {
+      const v = document.createElement('span');
+      v.className = 'img-pincel-vacio';
+      v.textContent = 'todavía no subiste ninguna';
+      listaImg.appendChild(v);
+    }
+    const elegida = items.find(x => x.id === sel);
+    avisoImg(sel ? ('pincel: ' + ((elegida && elegida.nombre) || 'imagen')) : 'sin imagen');
+  }
+
+  function elegirImagen(id) {
+    const P = window.PPDPinceles;
+    if (!P || !P.elegir) return;
+    if (!id) { P.elegir(null); pintarImagenes(); marcarPincel(); return; }
+    // el sello de imagen necesita el motor continuo (Vervette): con las
+    // pinceladas del Van Gogh la imagen no se estampa
+    if (window.PPD && window.PPD.pincel) window.PPD.pincel('vervette');
+    P.elegir(id);
+    pintarImagenes();
+    marcarPincel();
+    if (window.PPD && window.PPD.aviso) window.PPD.aviso('pincel de imagen');
+  }
+
+  if (btnImg && inputImg) {
+    btnImg.addEventListener('click', () => inputImg.click());
+    inputImg.addEventListener('change', async () => {
+      const f = inputImg.files && inputImg.files[0];
+      inputImg.value = '';                    // poder elegir el mismo archivo otra vez
+      if (!f) return;
+      const P = window.PPDPinceles;
+      if (!P || !P.subir) { avisoImg('no pude subir la imagen'); return; }
+      avisoImg('subiendo la imagen…');
+      try { await P.subir(f); } catch (e) { avisoImg('no pude subir la imagen'); }
+      pintarImagenes();
+      marcarPincel();
+    });
+  }
+  // si la imagen se elige/sube desde el otro panel, este queda al día
+  document.addEventListener('ppd-pincel-imagen', () => { pintarImagenes(); marcarPincel(); });
+
   // ---------- abrir / cerrar ----------
   function abrir(x, y) {
     if (window.TRAZO) window.TRAZO.onUp();     // cortá el trazo que estaba naciendo
@@ -94,6 +166,7 @@
     mover(px, py);
     pintarColores();
     pintarPinceles();
+    pintarImagenes();
     marcarPincel();
     if (window.PPD && window.PPD.aviso) window.PPD.aviso('panel rápido del pincel');
   }
@@ -222,7 +295,17 @@
     const b = ev.target.closest('[data-pincel]');
     if (b && window.PPD && window.PPD.pincel) {
       window.PPD.pincel(b.dataset.pincel);
+      // elegir un pincel suelta la imagen: en el panel grande los modos son
+      // excluyentes (NORMAL · VAN GOGH · IMAGEN) y acá se respeta lo mismo
+      if (window.PPDPinceles && PPDPinceles.elegido()) elegirImagen(null);
       marcarPincel();
+      return;
+    }
+    const im = ev.target.closest('[data-imagen]');
+    if (im) {
+      const P = window.PPDPinceles;
+      const sel = P && P.elegido ? P.elegido() : null;
+      elegirImagen(sel === im.dataset.imagen ? null : im.dataset.imagen);
     }
   });
 

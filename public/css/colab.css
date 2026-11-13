@@ -331,7 +331,7 @@
   font-size: 10px; color: #cfcbc2; background: rgba(40, 40, 48, .85);
   border: 1px solid var(--borde); border-radius: 50%; cursor: pointer;
 }
-.radial-cuerpo { padding: 8px; }
+.radial-cuerpo { padding: 8px; max-height: calc(100vh - 62px); overflow-y: auto; }
 /* paleta de colores del panel rápido */
 .radial-colores { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 6px; }
 .radial-color {
@@ -363,6 +363,18 @@
   color: #b9b5ac; background: rgba(255, 255, 255, .04); border: 1px solid var(--borde);
 }
 .radial-pincel.on { color: #12120f; background: var(--acc); border-color: var(--acc); font-weight: 700; }
+
+/* etiquetas del panel rápido: COLOR · PINCELES · PINCEL CON IMAGEN */
+.radial-cuerpo > .rotulo {
+  display: block; margin: 8px 0 4px;
+  font-size: 9px; letter-spacing: .14em; font-weight: 700;
+  text-transform: uppercase; color: var(--mut, #a09a90);
+}
+/* pincel con imagen: subir (+) y la lista de imágenes ya subidas */
+.radial-img-fila { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.radial-img-lista { gap: 4px; }
+.radial-img-lista .muestra.img-pincel { width: 30px; height: 30px; }
+.radial-img-lista .img-pincel-vacio { font-size: 9px; }
 
 /* "+" de la paleta */
 .muestras-fila { display: flex; align-items: center; gap: 6px; }
