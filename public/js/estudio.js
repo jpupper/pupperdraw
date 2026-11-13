@@ -293,10 +293,11 @@
     basePincel = { len: Math.max(6, +len || 78), wid: Math.max(1, +wid || 15) };
   }
   function aplicarTamano(pct) {
-    const k = Math.max(10, +pct || 100) / 100;
+    // 0 = pincel mínimo (1 px), 400 = máximo
+    const k = Math.max(0, Math.min(400, +pct)) / 100;
     // Vervette (trazo continuo): el tamaño es `tip.size`, no largo/ancho de pincelada
     if ((document.body.dataset.motor || 'trazo') === 'tip') {
-      const size = Math.max(1, Math.round(baseTip.size * k));
+      const size = Math.max(1, Math.round(baseTip.size * Math.max(0, k)));
       S['tip.size'] = size;
       E.S.setBrushSize(size);
       syncOut('tip.size');

@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PUPPERDRAW — lienzo colaborativo</title>
 <meta name="description" content="PUPPERDRAW: lienzo colaborativo de pinceladas. Cada uno pinta con su pincel y su color, y todo se sincroniza en vivo.">
-<link rel="stylesheet" href="css/base.css?v=2611131420">
-<link rel="stylesheet" href="css/estudio.css?v=2611131420">
-<link rel="stylesheet" href="css/colab.css?v=2611131420">
+<link rel="stylesheet" href="css/base.css?v=2611131800">
+<link rel="stylesheet" href="css/estudio.css?v=2611131800">
+<link rel="stylesheet" href="css/colab.css?v=2611131800">
 </head>
 <body data-motor="trazo">
 <canvas id="lienzo" width="1920" height="1080"></canvas>
@@ -87,7 +87,7 @@
         <span class="rotulo">PINCEL</span>
         <label class="campo" title="Escala el largo y el ancho de la pincelada">
           <span>Tamaño</span>
-          <input type="range" min="30" max="220" step="1" value="100" data-cmd="pincel.tamano">
+          <input type="range" min="0" max="400" step="1" value="100" data-cmd="pincel.tamano">
           <input type="text" class="num" data-out="pincel.tamano" inputmode="decimal" autocomplete="off">
         </label>
       </section>
@@ -433,7 +433,7 @@
     </label>
     <label class="campo" title="Tamaño de la pincelada (largo y ancho)">
       <span>Pincel</span>
-      <input type="range" min="30" max="220" step="1" value="100" data-cmd="pincel.tamano">
+      <input type="range" min="0" max="400" step="1" value="100" data-cmd="pincel.tamano">
       <input type="text" class="num" data-out="pincel.tamano" inputmode="decimal" autocomplete="off">
     </label>
     <label class="campo" title="Densidad de siembra: más bajo = pinceladas más separadas">
@@ -510,26 +510,26 @@
 </div>
 
 
-<script src="js/config.js?v=2611131420"></script>
-<script src="js/nombres.js?v=2611131420"></script>
-<script src="js/engine/shaders.js?v=2611131420"></script>
-<script src="js/engine/replica.js?v=2611131420"></script>
-<script src="js/flowfield.js?v=2611131420"></script>
-<script src="js/flowwind.js?v=2611131420"></script>
-<script src="js/engine/trazo.js?v=2611131420"></script>
-<script src="js/paletas.js?v=2611131420"></script>
-<script src="js/cuadros.js?v=2611131420"></script>
-<script src="js/imagenes.js?v=2611131420"></script>
-<script src="js/color.js?v=2611131420"></script>
-<script src="js/pinceles.js?v=2611131420"></script>
-<script src="js/presets.js?v=2611131420"></script>
-<script src="js/estudio.js?v=2611131420"></script>
-<script src="js/radial.js?v=2611131420"></script>
+<script src="js/config.js?v=2611131800"></script>
+<script src="js/nombres.js?v=2611131800"></script>
+<script src="js/engine/shaders.js?v=2611131800"></script>
+<script src="js/engine/replica.js?v=2611131800"></script>
+<script src="js/flowfield.js?v=2611131800"></script>
+<script src="js/flowwind.js?v=2611131800"></script>
+<script src="js/engine/trazo.js?v=2611131800"></script>
+<script src="js/paletas.js?v=2611131800"></script>
+<script src="js/cuadros.js?v=2611131800"></script>
+<script src="js/imagenes.js?v=2611131800"></script>
+<script src="js/color.js?v=2611131800"></script>
+<script src="js/pinceles.js?v=2611131800"></script>
+<script src="js/presets.js?v=2611131800"></script>
+<script src="js/estudio.js?v=2611131800"></script>
+<script src="js/radial.js?v=2611131800"></script>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="js/pincel-imagen.js?v=2611131550"></script>
-<script src="js/colab.js?v=2611131420"></script>
-<script src="js/cuenta.js?v=2611131420"></script>
-<script src="js/qr-pantalla.js?v=2611131420"></script>
+<script src="js/pincel-imagen.js?v=2611131800"></script>
+<script src="js/colab.js?v=2611131800"></script>
+<script src="js/cuenta.js?v=2611131800"></script>
+<script src="js/qr-pantalla.js?v=2611131800"></script>
 </body>
 </html>

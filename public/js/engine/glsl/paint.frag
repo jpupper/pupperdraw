@@ -109,7 +109,13 @@
         // El delta de color va PREMULTIPLICADO por la máscara: si se manda el
         // color pleno, en los bordes anti-aliasados (alfa chico) el negro del PNG
         // se suma igual y queda un filo negro alrededor del sello.
-        gl_FragColor = vec4((mix(base, texI.rgb, mI) - base), mI);
+        // La masa del sello REEMPLAZA (max), no suma: si se acumula sobre el
+        // ruido que ya estaba, el relieve viejo sigue mandando en la luz y la
+        // imagen parece quedar por detrás de las pinceladas anteriores.
+        // REEMPLAZA color y masa: la masa vieja (el ruido que ya estaba) se
+        // descuenta con un delta negativo, así el sello queda POR ENCIMA y no
+        // por detrás del relieve anterior.
+        gl_FragColor = vec4((mix(base, texI.rgb, mI) - base), mI - baseCol.a);
         return;
       }
       float intensity = smoothstep(radius,radius-softness,d);
