@@ -169,6 +169,11 @@ function sanearEstilo(e) {
   campo('pm', 0, 3);       // modo de pintura
   campo('rp', 0, 1);       // replace
   campo('ad', 0, 1);       // aditivo
+  // pincel de imagen: el id viaja como texto corto (los ids son hex de 10)
+  if (e.im !== undefined && e.im !== null) {
+    const im = String(e.im).replace(/[^a-z0-9]/gi, '').slice(0, 16);
+    if (im) out.im = im;
+  }
   return Object.keys(out).length ? out : null;
 }
 
@@ -472,6 +477,11 @@ app.get(['/api/salas', BASE_PATH + '/api/salas'], status);
 const perfil = require('./perfil');
 perfil.instalar(app, BASE_PATH);
 perfil.instalar(app, '');
+
+// pinceles de imagen (data/pinceles): <200 KB por archivo, sin base de datos
+const pinceles = require('./pinceles');
+pinceles.instalar(app, BASE_PATH);
+pinceles.instalar(app, '');
 
 // ------------------------------------------------------------
 // estáticos

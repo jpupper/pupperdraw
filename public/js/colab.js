@@ -200,6 +200,9 @@
     const tips = [];
     for (const s of lista) {
       if (!s || !isFinite(s.x) || !isFinite(s.y)) continue;
+      // pincel de imagen: la huella trae el id; si todavía no está la textura,
+      // se pide al servidor (se pinta procedural en este lote y con imagen al rato)
+      if (s.e && s.e.im && window.PPDImagenPincel) window.PPDImagenPincel(s.e.im);
       // si la huella trae su estilo completo, la opacidad ya viene adentro (est.op):
       // no se multiplica por la mía o el trazo sale más transparente acá que allá
       const tieneEstilo = !!(s.e && typeof s.e.op === 'number');

@@ -92,6 +92,16 @@
         </label>
       </section>
 
+      <section class="bloque" id="bloqueImagen">
+        <span class="rotulo">PINCEL CON IMAGEN</span>
+        <div class="img-pincel-fila">
+          <button type="button" class="mas-color" id="btnSubirImagen" title="Subir una imagen para usarla como pincel">+</button>
+          <input type="file" id="inputImagenPincel" accept="image/*" hidden>
+          <span class="img-pincel-estado" id="imgPincelEstado">sin imagen</span>
+        </div>
+        <div class="muestras" id="listaPinceles"></div>
+      </section>
+
       <section class="bloque">
         <span class="rotulo">PRESET</span>
         <label class="campo">
@@ -517,6 +527,7 @@
 <script src="js/radial.js?v=2611131420"></script>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="js/pincel-imagen.js?v=2611131550"></script>
 <script src="js/colab.js?v=2611131420"></script>
 <script src="js/cuenta.js?v=2611131420"></script>
 <script src="js/qr-pantalla.js?v=2611131420"></script>

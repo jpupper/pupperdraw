@@ -221,6 +221,11 @@
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
       return blankTex;
     }
+    // ---- texturas de los pinceles de imagen (cache por id) ----
+    // Las imagenes llegan de 200x200 desde el servidor: se suben una vez a la GPU
+    // y cada pincelada solo elige cual usar.
+    const imgTexCache = new Map();
+
     function texDeImagen(img) {
       const t = gl.createTexture();
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -377,6 +382,10 @@
       // trazo se ve distinto en cada pantalla. Lo único que NO viaja son los fluidos
       // y la luz, que son parámetros GLOBALES de la sala (valen para todos).
       const est = tip.est || null;
+      // PINCEL DE IMAGEN: si la pincelada trae imagen (est.im) y la textura esta
+      // cargada, el sello se pinta con esa imagen. Si no esta, sigue procedural.
+      let imgTex = null;
+      if (est && est.im) imgTex = imgTexCache.get(String(est.im)) || null;
       const en = (k, def) => (est && typeof est[k] === 'number' && isFinite(est[k])) ? est[k] : def;
       const bo = (k, def) => (est && typeof est[k] === 'number') ? !!est[k] : def;
       const bristleV = en('br', P.bristle);
@@ -419,6 +428,12 @@
         gl.uniform1f(P_.paint.uniforms.brushMatAdd, matAddV);
         gl.uniform1i(P_.paint.uniforms.iterations, iterationsV);
         gl.uniform1i(P_.paint.uniforms.uTarget, density.read[2]);
+        if (imgTex) {
+          gl.activeTexture(gl.TEXTURE0 + 9);
+          gl.bindTexture(gl.TEXTURE_2D, imgTex);
+          gl.uniform1i(P_.paint.uniforms.uBrushImg, 9);
+        }
+        gl.uniform1f(P_.paint.uniforms.uUseImg, imgTex ? 1 : 0);
         gl.uniform3f(P_.paint.uniforms.color, color[0], color[1], color[2]);
         gl.uniform1i(P_.paint.uniforms.paintMode, paintModeV);
         setBristle(P_.paint, axis, origin, seed, bristleV, stretchV);
@@ -773,6 +788,19 @@
       // radio EFECTIVO del pincel en este instante, en px del lienzo: incluye
       // TAMAÑO POR VEL. y el tamaño dinámico. Es el número que tiene que viajar
       // por socket para que el otro cliente pinte la huella del mismo grosor.
+      // ---- PINCEL DE IMAGEN ----
+      // Registra (o reemplaza) la textura de un pincel de imagen por id.
+      setImagenPincel(id, img) {
+        const clave = String(id);
+        const vieja = imgTexCache.get(clave);
+        if (vieja) { try { gl.deleteTexture(vieja); } catch (e) { } }
+        const t = texDeImagen(img);
+        imgTexCache.set(clave, t);
+        return true;
+      },
+      tieneImagenPincel(id) { return imgTexCache.has(String(id)); },
+      imagenesPincel() { return Array.from(imgTexCache.keys()); },
+
       radioActual() {
         const t = brushTips[0];
         return radioDe(t, P.isFirstDown ? 0 : speedNDe(t)) * canvas.height;

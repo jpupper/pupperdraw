@@ -63,6 +63,8 @@
     paleta: () => S['color.slots'].slice(),
     estado: () => S,
     pincel: (id) => setPincel(id),
+    // pincel de imagen: id de la imagen elegida (null = pincel normal)
+    imagenPincel: (id) => { S['pincel.imagen'] = id ? String(id) : null; },
     // parámetros GLOBALES (luz, fluidos, materia): los de la sala
     globales: () => globalesActuales(),
     aplicarGlobal: (est) => aplicarGlobales(est),
@@ -1090,7 +1092,10 @@
       ge: r3(P.granoEscala || 20),
       pm: P.paintMode | 0,
       rp: P.isShiftDown ? 1 : 0,
-      ad: P.isAdditive ? 1 : 0
+      ad: P.isAdditive ? 1 : 0,
+      // pincel de imagen: el id viaja con cada pincelada para que el otro
+      // cliente pinte con la MISMA imagen
+      im: S['pincel.imagen'] || undefined
     };
   }
 
