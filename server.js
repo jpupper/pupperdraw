@@ -187,14 +187,20 @@ function sanearStamp(t) {
   if (!t || typeof t !== 'object') return null;
   const x = Number(t.x), y = Number(t.y);
   if (!isFinite(x) || !isFinite(y)) return null;
+  // `n: 1` = coordenadas NORMALIZADAS 0..1 (fracción del lienzo del que pinta):
+  // el receptor las multiplica por SU lienzo. Sin `n` vienen en píxeles (clientes
+  // viejos) y se acotan con el rango de siempre.
+  const n = t.n === 1 || t.n === true;
   const c = Array.isArray(t.c) ? t.c.slice(0, 3).map((v) => num(v, 0, 1, 0)) : [1, 1, 1];
   return {
     k: 't',
-    x: num(x, -4000, 8000, 0),
-    y: num(y, -4000, 8000, 0),
-    dx: num(t.dx, -600, 600, 0),
-    dy: num(t.dy, -600, 600, 0),
-    r: num(t.r, 0.4, 500, 40),        // radio en px del lienzo
+    n: n ? 1 : 0,
+    x: n ? num(x, -0.5, 1.5, 0) : num(x, -4000, 8000, 0),
+    y: n ? num(y, -0.5, 1.5, 0) : num(y, -4000, 8000, 0),
+    dx: n ? num(t.dx, -1, 1, 0) : num(t.dx, -600, 600, 0),
+    dy: n ? num(t.dy, -1, 1, 0) : num(t.dy, -600, 600, 0),
+    // radio: fracción del ancho del lienzo cuando va normalizado
+    r: n ? num(t.r, 0.0002, 1, 0.021) : num(t.r, 0.4, 500, 40),
     s: num(t.s, 0, 1, 0.5),           // dureza (fracción del radio)
     o: num(t.o, 0, 1, 1),             // opacidad
     f: num(t.f, 0, 1, 0),             // primer punto del trazo (la gota inicial)
@@ -209,12 +215,16 @@ function sanearStamp(t) {
 function sanearTrazo(t) {
   if (!t || typeof t !== 'object') return null;
   const color = Array.isArray(t.c) ? t.c.slice(0, 3).map(x => num(x, 0, 1, 0)) : null;
+  // `n: 1` = coordenadas normalizadas 0..1 (x, y, largo y ancho como fracción del
+  // lienzo del que pinta); sin `n` vienen en píxeles, como antes.
+  const n = t.n === 1 || t.n === true;
   return {
-    x: num(t.x, -4000, 8000, 0),
-    y: num(t.y, -4000, 8000, 0),
+    n: n ? 1 : 0,
+    x: n ? num(t.x, -0.5, 1.5, 0) : num(t.x, -4000, 8000, 0),
+    y: n ? num(t.y, -0.5, 1.5, 0) : num(t.y, -4000, 8000, 0),
     a: num(t.a, -8, 8, 0),
-    l: num(t.l, 1, 400, 40),
-    w: num(t.w, 0.5, 120, 8),
+    l: n ? num(t.l, 0.0002, 2, 0.02) : num(t.l, 1, 400, 40),
+    w: n ? num(t.w, 0.0001, 1, 0.004) : num(t.w, 0.5, 120, 8),
     // velocidad de la mano del que pinta (px por evento) y pinceladas por carga:
     // el que recibe los necesita para que la corriente del fluido se mueva igual
     h: num(t.h, 0, 400, 0),
@@ -421,12 +431,15 @@ io.on('connection', (socket) => {
   socket.on('cursor', (c) => {
     const nombreSala = socket.data.sala;
     if (!nombreSala) return;
+    // el puntero viaja normalizado (n: 1) desde los clientes nuevos
+    const n = c && (c.n === 1 || c.n === true);
     socket.to(nombreSala).volatile.emit('cursor', {
       id: socket.id,
       nombre: socket.data.nombre,
       color: socket.data.color,
-      x: num(c && c.x, -1e5, 1e5, 0),
-      y: num(c && c.y, -1e5, 1e5, 0),
+      n: n ? 1 : 0,
+      x: n ? num(c.x, -0.5, 1.5, 0) : num(c && c.x, -1e5, 1e5, 0),
+      y: n ? num(c.y, -0.5, 1.5, 0) : num(c && c.y, -1e5, 1e5, 0),
       dentro: !!(c && c.dentro)
     });
   });

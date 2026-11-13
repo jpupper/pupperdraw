@@ -49,6 +49,22 @@
   if (ui.chatSala) ui.chatSala.textContent = sala;
 
   // ------------------------------------------------------------
+  // COORDENADAS NORMALIZADAS (0..1)
+  // ------------------------------------------------------------
+  // El lienzo interno no mide lo mismo en todas las pantallas (1920x1080 en
+  // escritorio, 1280x720 en celular, y cambia si se cambia el buffer): mandar
+  // píxeles crudos hacía que el trazo del otro cayera en otra parte y con otro
+  // grosor, y que en el celular se cortara todo lo que pasaba de 1280.
+  // Todo lo geométrico (x, y, dx, dy, radio, largo y ancho de la pincelada)
+  // viaja como FRACCIÓN del lienzo del que pinta y cada cliente lo desnormaliza
+  // con SU lienzo: así se pinta el ancho y el alto completos en cualquier
+  // pantalla. Los paquetes viejos (sin `n`) siguen entrando como píxeles.
+  const lienzoEl = () => document.getElementById('lienzo');
+  const anchoLienzo = () => { const c = lienzoEl(); return (c && c.width) || 1920; };
+  const altoLienzo = () => { const c = lienzoEl(); return (c && c.height) || 1080; };
+  const frac = (v) => Math.round((+v || 0) * 10000) / 10000;
+
+  // ------------------------------------------------------------
   // conexión
   // ------------------------------------------------------------
   let socket = null;
@@ -94,12 +110,14 @@
 
   function encolar(st) {
     // st es la pincelada que acaba de crear el motor local
+    const W = anchoLienzo(), H = altoLienzo();
     cola.push({
-      x: Math.round(st.x * 10) / 10,
-      y: Math.round(st.y * 10) / 10,
+      n: 1,                                  // coordenadas normalizadas 0..1
+      x: frac(st.x / W),
+      y: frac(st.y / H),
       a: Math.round(st.ang * 1000) / 1000,
-      l: Math.round(st.len * 10) / 10,
-      w: Math.round(st.wid * 10) / 10,
+      l: frac(st.len / W),                   // largo y ancho también en fracción
+      w: frac(st.wid / W),
       // velocidad de la mano al sembrar: sin esto el que recibe pinta la pincelada
       // con la corriente apagada y se ve como un sello duro, sin mezcla de fluido
       h: Math.round((st.hand || 0) * 10) / 10,
@@ -135,12 +153,14 @@
 
   function encolarStamp(s) {
     if (!s || !isFinite(s.x) || !isFinite(s.y)) return;
+    const W = anchoLienzo(), H = altoLienzo();
     colaStamps.push({
-      x: Math.round(s.x * 10) / 10,
-      y: Math.round(s.y * 10) / 10,
-      dx: Math.round((s.dx || 0) * 10) / 10,
-      dy: Math.round((s.dy || 0) * 10) / 10,
-      r: Math.round(s.r * 10) / 10,
+      n: 1,                                  // coordenadas normalizadas 0..1
+      x: frac(s.x / W),
+      y: frac(s.y / H),
+      dx: frac((s.dx || 0) / W),
+      dy: frac((s.dy || 0) / H),
+      r: frac(s.r / W),                      // radio en fracción del ancho
       s: Math.round((s.s == null ? 0.5 : s.s) * 1000) / 1000,
       o: Math.round((s.o == null ? 1 : s.o) * 1000) / 1000,
       // primer punto del trazo (la gota inicial redonda) y estilo COMPLETO del
@@ -183,9 +203,15 @@
     if (t.k === 't') { pintarStamps([t]); return; }
     const T = window.TRAZO;
     if (!T) return;
-    T.spawn(t.x, t.y, Math.cos(t.a), Math.sin(t.a), 1, {
+    // desnormalizar con MI lienzo (los paquetes viejos vienen en píxeles)
+    const W = anchoLienzo(), H = altoLienzo();
+    const x = t.n ? t.x * W : t.x;
+    const y = t.n ? t.y * H : t.y;
+    const len = t.n ? t.l * W : t.l;
+    const wid = t.n ? t.w * W : t.w;
+    T.spawn(x, y, Math.cos(t.a), Math.sin(t.a), 1, {
       color: Array.isArray(t.c) ? t.c : null,
-      len: t.l, wid: t.w,
+      len: len, wid: wid,
       pass: t.p || 1,
       hand: typeof t.h === 'number' ? t.h : null,   // la mano del que pinta, no la mía
       est: t.e || null,                             // su pincel, no el mío
@@ -197,6 +223,7 @@
   function pintarStamps(lista) {
     const E = window.ENGINE;
     if (!E || typeof E.frame !== 'function') return;
+    const W = anchoLienzo(), H = altoLienzo();
     const tips = [];
     for (const s of lista) {
       if (!s || !isFinite(s.x) || !isFinite(s.y)) continue;
@@ -206,10 +233,16 @@
       // si la huella trae su estilo completo, la opacidad ya viene adentro (est.op):
       // no se multiplica por la mía o el trazo sale más transparente acá que allá
       const tieneEstilo = !!(s.e && typeof s.e.op === 'number');
+      // normalizado (n:1) -> píxeles de MI lienzo; si no, ya viene en píxeles
+      const nx = s.n ? s.x * W : s.x;
+      const ny = s.n ? s.y * H : s.y;
+      const ndx = s.n ? (s.dx || 0) * W : (s.dx || 0);
+      const ndy = s.n ? (s.dy || 0) * H : (s.dy || 0);
+      const nr = s.n ? (s.r > 0 ? s.r * W : 0) : (s.r > 0 ? s.r : 0);
       tips.push({
-        x: s.x, y: s.y,
-        dx: s.dx || 0, dy: s.dy || 0,
-        rad: s.r > 0 ? s.r : 0,
+        x: nx, y: ny,
+        dx: ndx, dy: ndy,
+        rad: nr,
         soft: typeof s.s === 'number' ? s.s : 0,
         opac: tieneEstilo ? 1 : (typeof s.o === 'number' ? s.o : 1),
         est: s.e || null,      // textura, materia, dureza, cerda... del que pintó
@@ -421,7 +454,10 @@
       (ui.cursores || document.body).appendChild(el);
       cursores.set(c.id, el);
     }
-    el.style.transform = 'translate(' + c.x + 'px,' + c.y + 'px)';
+    // el puntero también viaja normalizado: acá se pasa a píxeles de MI pantalla
+    const cx = c.n ? c.x * window.innerWidth : c.x;
+    const cy = c.n ? c.y * window.innerHeight : c.y;
+    el.style.transform = 'translate(' + cx + 'px,' + cy + 'px)';
     el.style.opacity = c.dentro ? '1' : '0';
     el.style.setProperty('--c', c.color || '#f5c518');
     el.querySelector('span').textContent = c.nombre || '';
@@ -454,21 +490,21 @@
     }
   }
 
-  // manda mi puntero (para que los demás vean dónde estoy)
+  // manda mi puntero (para que los demás vean dónde estoy), NORMALIZADO 0..1
   const lienzo = $('lienzo');
   let ultCursor = 0;
   function mandarCursor(x, y, dentro) {
     const ahora = performance.now();
     if (ahora - ultCursor < 60) return;
     ultCursor = ahora;
-    if (socket && socket.connected) socket.emit('cursor', { x: x, y: y, dentro: dentro });
+    if (socket && socket.connected) socket.emit('cursor', { n: 1, x: x, y: y, dentro: dentro });
   }
   if (lienzo) {
     lienzo.addEventListener('pointermove', (e) => {
       const r = lienzo.getBoundingClientRect();
       mandarCursor(
-        Math.round((e.clientX - r.left) / r.width * lienzo.width),
-        Math.round((e.clientY - r.top) / r.height * lienzo.height),
+        frac((e.clientX - r.left) / r.width),
+        frac((e.clientY - r.top) / r.height),
         true
       );
     });

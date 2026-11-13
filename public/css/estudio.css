@@ -265,8 +265,9 @@ body.panel-off .fab { display: flex; }
 #btnSalirPantalla:focus-visible { opacity: 1; }
 #btnSalirPantalla[hidden] { display: none !important; }
 
-/* MODO PANTALLA: se oculta ABSOLUTAMENTE todo menos el lienzo, el campo y el QR */
-body.modo-pantalla > *:not(#lienzo):not(#campo):not(#qrFlotante):not(#btnSalirPantalla) {
+/* MODO PANTALLA: se oculta ABSOLUTAMENTE todo menos el lienzo, el campo, el QR
+   y el panel rápido (el long press tiene que seguir funcionando en fullscreen) */
+body.modo-pantalla > *:not(#lienzo):not(#campo):not(#qrFlotante):not(#btnSalirPantalla):not(#radial):not(#radialCarga) {
     display: none !important;
 }
 

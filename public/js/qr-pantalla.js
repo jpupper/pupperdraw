@@ -4,8 +4,8 @@
    El QR de la sala ya no es un modal: se prende desde el menú (sección QR) y
    queda flotando sobre el lienzo, con posición X, Y y escala.
 
-   El botón ⛶ PANTALLA oculta TODA la interfaz y deja sólo el dibujo y el QR,
-   para proyectar: la gente escanea y entra a pintar desde el celular.
+   El botón ⛶ PANTALLA oculta TODA la interfaz y deja sólo el dibujo (y el QR si
+   está prendido), para proyectar: la gente escanea y entra a pintar desde el celular.
    Se sale con Esc o con la ✕ que aparece al pasar el mouse por arriba a la derecha.
    ========================================================================== */
 (function () {
@@ -116,8 +116,8 @@
   function entrarPantalla() {
     document.body.classList.add('modo-pantalla');
     if (btnSalir) btnSalir.hidden = false;
-    // si el QR estaba apagado, se prende: es la gracia del modo
-    if (!st.on) { st.on = true; sincronizarControles(); aplicar(); }
+    // El QR NO se toca: se prende y se apaga sólo con su switch del menú.
+    // (Antes se prendía solo al entrar en modo pantalla y el usuario no lo quería.)
     ubicar();
     if (btnPantalla) btnPantalla.setAttribute('aria-pressed', 'true');
     // pantalla completa real cuando el navegador lo permite
@@ -147,7 +147,10 @@
   if (btnSalir) btnSalir.addEventListener('click', salirPantalla);
 
   document.addEventListener('keydown', function (ev) {
-    if (ev.key === 'Escape' && estaPantalla()) salirPantalla();
+    // Esc cierra PRIMERO el panel rápido si está abierto (radial.js lo escucha en
+    // window, o sea después): así en modo pantalla no se sale del fullscreen de un
+    // Esc que sólo quería cerrar el panel.
+    if (ev.key === 'Escape' && estaPantalla() && !(window.VGRadial && window.VGRadial.abierto && window.VGRadial.abierto())) salirPantalla();
   });
 
   // si el navegador sale de fullscreen (F11, Esc del sistema), se restaura la UI
