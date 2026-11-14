@@ -240,10 +240,13 @@ function sanearTrazo(t) {
 // parámetros GLOBALES de la sala: luz, fluidos, materia y sus switches
 // ------------------------------------------------------------
 const NUM_GLOBAL = {
-  'fluid.speed': [0, 100], 'fluid.smudge': [0, 99], 'fluid.slip': [0, 99], 'fluid.life': [0, 100],
-  'light.gloss': [0, 100], 'light.bump': [0, 99], 'light.refrstr': [0, 100]
+  // los mismos topes que los sliders del panel (fluid.speed llega a 110 desde que
+  // se bajó el techo de 300; si acá quedaba 100, el valor 110 llegaba clampeado)
+  'fluid.speed': [0, 110], 'fluid.smudge': [0, 99], 'fluid.slip': [0, 99], 'fluid.life': [0, 100],
+  'light.gloss': [0, 100], 'light.bump': [0, 99], 'light.refrstr': [0, 100],
+  'autoclean.k': [0, 100]
 };
-const FLAGS_GLOBAL = ['fluid', 'vivo', 'dry', 'light'];
+const FLAGS_GLOBAL = ['fluid', 'vivo', 'dry', 'light', 'autoclean'];
 
 function sanearGlobales(g) {
   if (!g || typeof g !== 'object') return null;

@@ -38,6 +38,7 @@
       granoEscala: 20,
       fluidLife: 0.5,
       fluidLive: false,   // el pincel suma velocidad al fluido (no lo pisa) cuando esta en true
+      autoCleanK: 0,      // AUTOCLEAN: fraccion de densidad que se descuenta por frame (0 = apagado)
       isPudMode: false,
       isAutoStop: false,
       isLighting: true,
@@ -180,7 +181,9 @@
       gradientSubtract: new GLProgram(baseVertexShader, compileShader(gl.FRAGMENT_SHADER, SHADERS.gradient_subtract), 'gradientSubtract'),
       gradientDry: new GLProgram(baseVertexShader, compileShader(gl.FRAGMENT_SHADER, SHADERS.gradient_dry), 'gradientDry'),
       // corriente: advecta la densidad con una corriente procedural que sigue al pincel
-      corriente: new GLProgram(baseVertexShader, compileShader(gl.FRAGMENT_SHADER, SHADERS.corriente), 'corriente')
+      corriente: new GLProgram(baseVertexShader, compileShader(gl.FRAGMENT_SHADER, SHADERS.corriente), 'corriente'),
+      // autoclean: va tapando la pintura (densidad) sola, como si se pusiera negro encima
+      autoClean: new GLProgram(baseVertexShader, compileShader(gl.FRAGMENT_SHADER, SHADERS.autoclean), 'autoClean')
     };
 
     // ---------- buffers ----------
@@ -551,6 +554,21 @@
       }
     }
 
+    // ---------- AUTOCLEAN ----------
+    // Va tapando la pintura con negro: multiplica la densidad (color Y masa) por
+    // (1 - k) en cada frame. k sale del slider (0 = apagado) y con k=0 hace return
+    // inmediato, así que es INERTE cuando no se usa. Bajando la masa, el display la
+    // muestra como fondo negro y el relieve desaparece, igual que tapar con negro.
+    function stepAutoClean() {
+      const k = P.autoCleanK || 0;
+      if (k <= 0.00001) return;
+      P_.autoClean.bind();
+      gl.uniform1i(P_.autoClean.uniforms.uTexture, density.read[2]);
+      gl.uniform1f(P_.autoClean.uniforms.uK, Math.min(0.5, k));
+      blit(density.write[1]);
+      density.swap();
+    }
+
     function stepFluidAdvect(dt) {
       if (!(P.isFluid && !P.isPudMode)) return;
       const tx = { x: 1 / textureWidth, y: 1 / textureHeight };
@@ -758,6 +776,7 @@
       // la corriente va DESPUÉS del advect y del swap: lee el buffer ya advectado y
       // escribe el suyo, así el pase de fluido del motor no la pisa
       stepCorriente(dt);
+      stepAutoClean();
       stepProject();
       gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
       displayRender({ x: 1 / textureWidth, y: 1 / textureHeight }, { x: 0.5, y: 0.5 }, canvas.width / canvas.height, P.isShowCursor);

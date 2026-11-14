@@ -176,6 +176,7 @@
     'color.slot': 0, 'color.slots': VGColor.slotsHex(),
     'color.image': (window.VGCUADROS ? VGCUADROS.DEFAULT : 'noche'), 'color.imgradio': 0,
     'fluid.speed': 20, 'fluid.smudge': 99, 'fluid.slip': 50, 'fluid.life': 50, 'paint.blend': 'add',
+    'autoclean.k': 0,
     'flow.densidad': 70, 'flow.velocidad': 100, 'flow.grilla': 40, 'flow.escala': 100, 'flow.fuerza': 85, 'flow.radio': 150, 'flow.cobertura': 32, 'flow.smartfuerza': 55,
     // menú FLUJO (flowfield = campo del cuadro · flowwind = corrientes de aire)
     'flujo.modo': 'flowfield',
@@ -185,7 +186,7 @@
     'luz.materia': 'off', 'luz.refraccion': 'off'
   };
   const FLAGS = { fluid: true, dry: true, light: true, verimagen: false, vivo: true, speedsize: true,
-    windactivo: false, windver: false };
+    windactivo: false, windver: false, autoclean: false };
 
   // ---------- comandos ----------
   const APPLY = {
@@ -229,6 +230,11 @@
     'luz.refraccion': v => setRefraccion(v),
     'light.refrstr': v => { P.refrStrength = +v / 100 * 6.4; },
     'fluid.speed': v => E.S.setFluidSpeed(+v),
+    // AUTOCLEAN: fracción de pintura que se va a negro en cada frame (0 = apagado)
+    'autoclean.k': v => {
+      const k = Math.max(0, Math.min(100, +v));
+      P.autoCleanK = FLAGS.autoclean ? Math.pow(k / 100, 2) * 0.06 : 0;
+    },
     'fluid.smudge': v => E.S.setFluidSmudge(+v),
     'fluid.slip': v => E.S.setFluidSlip(+v),
     'fluid.life': v => { P.fluidLife = +v / 100; },
@@ -682,6 +688,13 @@
       FLAGS.light = !FLAGS.light; P.isLighting = FLAGS.light;
       marcarSwitch(btn, FLAGS.light);
       avisarGlobal();
+    } else if (act === 'autoclean') {
+      // AUTOCLEAN: la pintura se va tapando de negro sola (es de la sala)
+      FLAGS.autoclean = !FLAGS.autoclean;
+      marcarSwitch(btn, FLAGS.autoclean);
+      APPLY['autoclean.k'](S['autoclean.k']);
+      avisarGlobal();
+      estado(FLAGS.autoclean ? 'AUTOCLEAN encendido: el lienzo se va limpiando solo' : 'AUTOCLEAN apagado');
     } else if (act === 'flow.auto') {
       if (!FLOW) return;
       FLOW.st.auto = !FLOW.st.auto;
@@ -1272,7 +1285,7 @@
 
   // ---------- presets: guardar / cargar todo el panel ----------
   const FLAG_ACT = { fluid: 'fluid.toggle', dry: 'fluid.dry', vivo: 'fluid.vivo', light: 'light.toggle', verimagen: 'imagen.ver', speedsize: 'tip.speedsize',
-    windactivo: 'flowwind.toggle', windver: 'flowwind.ver' };
+    windactivo: 'flowwind.toggle', windver: 'flowwind.ver', autoclean: 'autoclean' };
 
   function aplicarEstado(est) {
     if (!est) return;
@@ -1343,9 +1356,9 @@
   const PARAMS_GLOBALES = [
     'fluid.speed', 'fluid.smudge', 'fluid.slip', 'fluid.life',
     'light.gloss', 'light.bump', 'light.refrstr',
-    'paint.blend', 'luz.materia', 'luz.refraccion'
+    'paint.blend', 'luz.materia', 'luz.refraccion', 'autoclean.k'
   ];
-  const FLAGS_GLOBALES = ['fluid', 'vivo', 'dry', 'light'];
+  const FLAGS_GLOBALES = ['fluid', 'vivo', 'dry', 'light', 'autoclean'];
   let alCambiarGlobal = null;
   let aplicandoGlobal = false;
 
