@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PUPPERDRAW — lienzo colaborativo</title>
 <meta name="description" content="PUPPERDRAW: lienzo colaborativo de pinceladas. Cada uno pinta con su pincel y su color, y todo se sincroniza en vivo.">
-<link rel="stylesheet" href="css/base.css?v=261114192437">
-<link rel="stylesheet" href="css/estudio.css?v=261114192437">
-<link rel="stylesheet" href="css/colab.css?v=261114192437">
+<link rel="stylesheet" href="css/base.css?v=261114193003">
+<link rel="stylesheet" href="css/estudio.css?v=261114193003">
+<link rel="stylesheet" href="css/colab.css?v=261114193003">
 </head>
 <body data-motor="trazo">
 <canvas id="lienzo" width="1920" height="1080"></canvas>
@@ -28,6 +28,11 @@
     <button type="button" class="colab-bot cuenta-bot" id="btnCuenta" title="entrar con tu cuenta Fullscreen">LOGIN</button>
     <button type="button" class="colab-bot" id="colabLink" title="Copiar el link de esta sala">COPIAR LINK</button>
     <button type="button" class="colab-bot btn-png" id="btnPng" title="Descargar el lienzo como PNG">↓ PNG</button>
+    <div class="colab-bot barra-autoclean" title="AUTOCLEAN: la pintura se va tapando de negro sola (es de la sala)">
+      <span class="ac-rot">AUTOCLEAN</span>
+      <button type="button" class="sw mini" id="btnAutoCleanBar" aria-pressed="false" title="Encender / apagar el autoclean"><i></i><span></span></button>
+      <input type="range" id="slAutoCleanBar" min="0" max="100" step="1" value="0" aria-label="Velocidad del autoclean">
+    </div>
     <button type="button" class="colab-bot btn-fluidos" id="btnFluidos" title="Opciones avanzadas de fluidos: velocidad, arrastre, desliz y vida" aria-label="Opciones avanzadas de fluidos"><span class="rueda">⚙</span><span class="txt">FLUIDOS</span></button>
     <button type="button" class="colab-bot" id="colabLimpiar" title="Borrar el lienzo para todos">LIMPIAR</button>
     <button type="button" class="colab-bot btn-pantalla" id="btnPantalla" title="Modo pantalla: sólo el lienzo y el QR">⛶ PANTALLA</button>
@@ -259,7 +264,7 @@
       </div>
     </details>
 
-    <details class="sec" id="secAutoClean">
+    <details class="sec" id="secAutoClean" open>
       <summary>AUTOCLEAN</summary>
       <div class="cuerpo">
         <div class="toggles">
@@ -538,26 +543,26 @@
 </div>
 
 
-<script src="js/config.js?v=261114192437"></script>
-<script src="js/nombres.js?v=261114192437"></script>
-<script src="js/engine/shaders.js?v=261114192437"></script>
-<script src="js/engine/replica.js?v=261114192437"></script>
-<script src="js/flowfield.js?v=261114192437"></script>
-<script src="js/flowwind.js?v=261114192437"></script>
-<script src="js/engine/trazo.js?v=261114192437"></script>
-<script src="js/paletas.js?v=261114192437"></script>
-<script src="js/cuadros.js?v=261114192437"></script>
-<script src="js/imagenes.js?v=261114192437"></script>
-<script src="js/color.js?v=261114192437"></script>
-<script src="js/pinceles.js?v=261114192437"></script>
-<script src="js/presets.js?v=261114192437"></script>
-<script src="js/estudio.js?v=261114192437"></script>
-<script src="js/radial.js?v=261114192437"></script>
+<script src="js/config.js?v=261114193003"></script>
+<script src="js/nombres.js?v=261114193003"></script>
+<script src="js/engine/shaders.js?v=261114193003"></script>
+<script src="js/engine/replica.js?v=261114193003"></script>
+<script src="js/flowfield.js?v=261114193003"></script>
+<script src="js/flowwind.js?v=261114193003"></script>
+<script src="js/engine/trazo.js?v=261114193003"></script>
+<script src="js/paletas.js?v=261114193003"></script>
+<script src="js/cuadros.js?v=261114193003"></script>
+<script src="js/imagenes.js?v=261114193003"></script>
+<script src="js/color.js?v=261114193003"></script>
+<script src="js/pinceles.js?v=261114193003"></script>
+<script src="js/presets.js?v=261114193003"></script>
+<script src="js/estudio.js?v=261114193003"></script>
+<script src="js/radial.js?v=261114193003"></script>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="js/pincel-imagen.js?v=261114192437"></script>
-<script src="js/colab.js?v=261114192437"></script>
-<script src="js/cuenta.js?v=261114192437"></script>
-<script src="js/qr-pantalla.js?v=261114192437"></script>
+<script src="js/pincel-imagen.js?v=261114193003"></script>
+<script src="js/colab.js?v=261114193003"></script>
+<script src="js/cuenta.js?v=261114193003"></script>
+<script src="js/qr-pantalla.js?v=261114193003"></script>
 </body>
 </html>

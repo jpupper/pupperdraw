@@ -160,6 +160,29 @@
 
   function avisoFlow(t) { const el = document.getElementById('flowMsg'); if (el) el.textContent = t; }
 
+  // ---------- AUTOCLEAN (switch + slider en la barra y en el panel) ----------
+  // El MISMO parámetro en los dos lados: el estado manda en FLAGS.autoclean y el
+  // valor en S['autoclean.k'] → APPLY lo pasa a P.autoCleanK. Los dos switches se
+  // marcan siempre juntos (por eso existen las funciones; no marcar uno solo).
+  function marcarAutoClean() {
+    ['btnAutoCleanBar', 'btnAutoClean'].forEach(id => {
+      const b = document.getElementById(id);
+      if (b) marcarSwitch(b, FLAGS.autoclean);
+    });
+    const sl = document.getElementById('slAutoCleanBar');
+    if (sl && document.activeElement !== sl) sl.value = S['autoclean.k'];
+  }
+
+  function toggleAutoClean() {
+    FLAGS.autoclean = !FLAGS.autoclean;
+    // encender con el slider en 0 no haría nada: arranca en 35
+    if (FLAGS.autoclean && !(+S['autoclean.k'] > 0)) set('autoclean.k', 35);
+    APPLY['autoclean.k'](S['autoclean.k']);
+    marcarAutoClean();
+    avisarGlobal();
+    estado(FLAGS.autoclean ? 'AUTOCLEAN encendido: el lienzo se va limpiando solo' : 'AUTOCLEAN apagado');
+  }
+
   // ---------- estado de la UI (fuente de verdad del panel) ----------
   const S = {
     pincel: VGPinceles.DEFAULT,
@@ -345,6 +368,11 @@
     }
     const inp = document.querySelector('[data-cmd="' + cmd + '"]');
     if (inp && String(inp.value) !== String(S[cmd])) inp.value = S[cmd];
+    // el AUTOCLEAN vive también en la barra: su slider muestra el mismo valor
+    if (cmd === 'autoclean.k') {
+      const bar = document.getElementById('slAutoCleanBar');
+      if (bar && document.activeElement !== bar) bar.value = S[cmd];
+    }
   }
 
   function syncAll() {
@@ -690,11 +718,7 @@
       avisarGlobal();
     } else if (act === 'autoclean') {
       // AUTOCLEAN: la pintura se va tapando de negro sola (es de la sala)
-      FLAGS.autoclean = !FLAGS.autoclean;
-      marcarSwitch(btn, FLAGS.autoclean);
-      APPLY['autoclean.k'](S['autoclean.k']);
-      avisarGlobal();
-      estado(FLAGS.autoclean ? 'AUTOCLEAN encendido: el lienzo se va limpiando solo' : 'AUTOCLEAN apagado');
+      toggleAutoClean();
     } else if (act === 'flow.auto') {
       if (!FLOW) return;
       FLOW.st.auto = !FLOW.st.auto;
@@ -1535,6 +1559,21 @@
   P.isFluid = true; P.isDrying = true; P.isLighting = true; P.fluidLive = true;
   document.getElementById('btnFluid').classList.add('on');
   document.getElementById('btnDry').classList.add('on');
+  // ---------- AUTOCLEAN de la barra (switch + slider) ----------
+  // Van fuera del panel, así que no los alcanzan los listeners de #panel: se
+  // enganchan a mano acá y escriben el mismo parámetro de la sala.
+  (function engancharAutoCleanBarra() {
+    const sw = document.getElementById('btnAutoCleanBar');
+    const sl = document.getElementById('slAutoCleanBar');
+    if (sw) sw.addEventListener('click', (ev) => { ev.preventDefault(); toggleAutoClean(); });
+    if (sl) {
+      const aplicar = () => set('autoclean.k', sl.value);
+      sl.addEventListener('input', aplicar);
+      sl.addEventListener('change', aplicar);
+    }
+    marcarAutoClean();
+  })();
+
   document.getElementById('btnLight').classList.add('on');
   muestras();
   sincronizarSwitches();

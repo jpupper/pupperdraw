@@ -63,6 +63,31 @@
   transition: color .15s, border-color .15s, background .15s;
 }
 
+/* AUTOCLEAN en la barra: rótulo + switch + slider (mismo parámetro que la sección
+   del panel; el switch del panel y el de acá se marcan juntos) */
+.barra-autoclean {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px 4px 11px;
+  cursor: default;
+}
+.barra-autoclean .ac-rot {
+  font-size: 9px;
+  letter-spacing: .12em;
+  font-weight: 700;
+  color: var(--acc, #f5c518);
+  white-space: nowrap;
+}
+.barra-autoclean input[type="range"] {
+  width: 66px;
+  height: 12px;
+  accent-color: var(--acc, #f5c518);
+  cursor: pointer;
+}
+.barra-autoclean .sw.mini { padding: 2px 4px; }
+.barra-autoclean .sw.mini > span { display: none; }
+
 .colab-bot:hover {
   color: var(--acc, #f5c518);
   border-color: var(--acc, #f5c518);
