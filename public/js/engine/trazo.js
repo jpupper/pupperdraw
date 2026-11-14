@@ -168,8 +168,12 @@
           pm: estN('pm', P.paintMode | 0),
           rp: estN('rp', P.isShiftDown ? 1 : 0),
           ad: estN('ad', P.isAdditive ? 1 : 0),
-          // pincel de imagen: viaja el id para que el otro pinte con la misma
-          im: (est && est.im) ? est.im : (R.imagenPincel || undefined)
+          // pincel de imagen: viaja el id para que el otro pinte con la misma.
+          // OJO: el fallback `R.imagenPincel` es SÓLO para las pinceladas propias.
+          // Si una remota llegaba sin `im`, heredaba la imagen que tuviera cargada
+          // EL QUE RECIBE y las pinceladas del Van Gogh ajeno se pintaban con esa
+          // imagen (bug: "en su cliente se veía con color y en el mío con imagen").
+          im: (est && est.im) ? est.im : ((ov && ov.remoto) ? undefined : (R.imagenPincel || undefined))
         },
         // velocidad de la mano que la sembró: la usan los tips para alimentar la corriente.
         // En las remotas sin dato (historial viejo, cliente viejo) queda null y el motor

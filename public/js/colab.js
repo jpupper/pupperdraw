@@ -190,7 +190,7 @@
     const T = window.TRAZO;
     if (!T || !T.R) return setTimeout(enganchar, 300);
     T.R.onSpawn = (st) => encolar(st);
-    estado('pintando en «' + sala + '»');
+    estado('');                       // la sala ya está en el chat: la barra no la repite
   }
   enganchar();
 
@@ -285,7 +285,8 @@
     }
     // El lienzo arranca LIMPIO: el dibujo que ya estaba en la sala NO se
     // reconstruye. Sólo se sincroniza lo que llega a partir de ahora.
-    estado('pintando en «' + data.sala + '»');
+    // (La sala se muestra en el chat; la barra ya no repite "pintando en «sala»".)
+    estado('');
   });
 
   socket.on('limpiar', (d) => {

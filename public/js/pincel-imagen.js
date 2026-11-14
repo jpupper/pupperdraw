@@ -110,6 +110,11 @@
     // al soltar la imagen, el modo vuelve al pincel que está puesto (si no, los
     // chips del panel seguían diciendo IMAGEN con la lista vacía)
     else if (modo === 'imagen') modo = (document.body.dataset.motor === 'trazo') ? 'vangogh' : 'vervette';
+    // El sello de imagen necesita el motor continuo (Vervette): elegir una imagen
+    // pasa al pincel normal SIN importar de dónde venga (chips, radial, o subir un
+    // archivo). Si no, quedaba un Van Gogh "con imagen" que el otro cliente veía
+    // distinto. Va ANTES de PPD.imagenPincel: setPincel suelta la imagen.
+    if (sel && window.PPD && PPD.pincel && document.body.dataset.motor !== 'tip') PPD.pincel('vervette');
     if (window.PPD && PPD.imagenPincel) PPD.imagenPincel(sel);
     pintarLista();
     pintarModos();

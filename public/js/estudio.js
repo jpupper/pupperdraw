@@ -375,6 +375,14 @@
     selPincel.value = b.id;
     document.body.dataset.motor = b.motor;
     document.getElementById('pincelDesc').textContent = b.desc;
+    // ELEGIR UN PINCEL SUELTA LA IMAGEN: NORMAL · VAN GOGH · IMAGEN son modos
+    // excluyentes. Si la imagen quedaba armada, las pinceladas del Van Gogh
+    // viajaban con `im` y el otro cliente pintaba un Van Gogh "con imagen"
+    // (el bug de la mezcla). El que elige imagen la vuelve a poner enseguida.
+    if (S['pincel.imagen']) {
+      S['pincel.imagen'] = null;
+      if (window.TRAZO && TRAZO.R) TRAZO.R.imagenPincel = null;
+    }
 
     if (b.motor === 'trazo') {
       TRAZO.R.enabled = true;
@@ -1147,6 +1155,13 @@
       if (tip.moved) {
         P.bristle = 0;
         const radLocal = radioLocal();   // ANTES del frame: si no, sale el rad del trazo anterior
+        // RADIO DEL SELLO: con pincel de imagen el sello sale de P.brushSize ×4
+        // (1:1 con el slider) y NO de radioActual(). La huella tiene que viajar con
+        // ESTE número, el mismo que pinta acá: antes mandaba `radLocal` (el radio
+        // sin imagen) y al otro cliente le llegaba un sello mucho más chico.
+        const radSello = S['pincel.imagen']
+          ? Math.max(8, (E.P && E.P.brushSize ? E.P.brushSize : 0.05) * canvas.height * 4)
+          : radLocal;
         if (VGColor.usesPerLoad()) {
           const c = VGColor.colorForLoad(cargasTip++, tip.x, tip.y);
           if (c) E.color(c[0], c[1], c[2]);
@@ -1156,9 +1171,9 @@
         if (window.COLAB && typeof window.COLAB.stamp === 'function') {
           window.COLAB.stamp({
             x: tip.x, y: tip.y, dx: tip.dx, dy: tip.dy,
-            // radio EFECTIVO (ya incluye TAMAÑO POR VEL.): si viajara el tamaño pelado,
-            // el otro cliente vería un trazo de ancho fijo y no el de acá
-            r: radLocal,
+            // radio EFECTIVO (ya incluye TAMAÑO POR VEL. y el ×4 de la imagen): si
+            // viajara el tamaño pelado, el otro vería un trazo de otro grosor
+            r: radSello,
             s: P.brushSoft,
             o: P.brushOpacity,
             f: P.isFirstDown ? 1 : 0,   // primer punto del trazo: la misma gota inicial
@@ -1173,12 +1188,9 @@
         const ajenas = TRAZO.frame();
         const propio = {
           x: tip.x, y: tip.y, dx: tip.dx, dy: tip.dy,
-          // con pincel de imagen el sello sigue el TAMAÑO elegido (1:1 con el slider);
-          // sin imagen se usa el radio real del pincel (tamaño por velocidad)
-          // con pincel de imagen el sello sigue el TAMAÑO elegido y llega a x4
-          rad: S['pincel.imagen']
-            ? Math.max(8, (E.P && E.P.brushSize ? E.P.brushSize : 0.05) * canvas.height * 4)
-            : radLocal,
+          // el sello sigue el TAMAÑO elegido y, con imagen, llega a ×4: el `rad`
+          // tiene que ser EXACTAMENTE el mismo que viaja en la huella (radSello)
+          rad: radSello,
           soft: P.brushSoft,
           opac: P.brushOpacity,
           est: estiloTip(),
