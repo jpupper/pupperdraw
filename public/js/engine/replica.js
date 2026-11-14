@@ -707,6 +707,13 @@
       // reusa, asi que hay que devolverle el color local al terminar el lote
       // (si no, el color del otro se le "pega" al pincel de este cliente).
       const colorPropio = tip.color;
+      // LO MISMO CON LA GEOMETRÍA DEL PUNTERO: `brushTips[0]` es el objeto donde
+      // estudio.js guarda MI puntero (tip.x/y/dx/dy los escribe su pointermove).
+      // Una pincelada remota lo deja apuntando a la posición del OTRO cliente, y
+      // entonces el próximo movimiento mío calcula dx contra ese punto: la cápsula
+      // del pincel se dibuja larguísima y el fluido arrastra un brochazo entre los
+      // dos punteros (el "línea entre los 2 clientes"). Se guarda y se devuelve.
+      const ptr = { x: tip.x, y: tip.y, dx: tip.dx, dy: tip.dy, first: P.isFirstDown };
       if (tips && tips.length) {
         // Un pase de pintura escribe un DELTA sobre el buffer de destino y lo
         // calcula leyendo el buffer de lectura. Con un solo tip el original
@@ -737,6 +744,9 @@
         tip.speed += tip.filter * 0.5;
         tip.filter *= 0.5;
         if (!multi) { density.swap(); if (P.isFluid) velocity.swap(); }
+        // devolver MI puntero: el lote pudo terminar en una pincelada remota
+        tip.x = ptr.x; tip.y = ptr.y; tip.dx = ptr.dx; tip.dy = ptr.dy;
+        P.isFirstDown = ptr.first;
       } else {
         density.swap(); if (P.isFluid) velocity.swap();
       }
