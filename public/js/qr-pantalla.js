@@ -113,14 +113,16 @@
   /* ---------- modo pantalla ---------- */
   function estaPantalla() { return document.body.classList.contains('modo-pantalla'); }
 
-  function entrarPantalla() {
+  function entrarPantalla(sinFullscreen) {
     document.body.classList.add('modo-pantalla');
     if (btnSalir) btnSalir.hidden = false;
     // El QR NO se toca: se prende y se apaga sólo con su switch del menú.
     // (Antes se prendía solo al entrar en modo pantalla y el usuario no lo quería.)
     ubicar();
     if (btnPantalla) btnPantalla.setAttribute('aria-pressed', 'true');
-    // pantalla completa real cuando el navegador lo permite
+    // pantalla completa real cuando el navegador lo permite (y cuando hay gesto:
+    // desde ?fullscreen=true no lo hay, así que ni se pide)
+    if (sinFullscreen) return;
     var el = document.documentElement;
     try {
       if (!document.fullscreenElement && el.requestFullscreen) {
@@ -181,4 +183,14 @@
 
   sincronizarControles();
   aplicar();
+
+  /* ---------- ?fullscreen=true → arranca directo en modo pantalla ----------
+     Pensado para dejar un proyector/pantalla con el link puesto: levanta el render
+     sin NADA de interfaz (barra, panel, chat, fab), como si hubieras apretado
+     ⛶ PANTALLA. El QR NO se prende solo (se maneja con su switch), y se sale con
+     Esc o con la ✕ de arriba a la derecha. Ojo: el fullscreen REAL del navegador
+     necesita un gesto del usuario, así que desde la URL sólo se oculta la interfaz
+     (para pantalla completa de verdad, F11 o el botón). */
+  var fsUrl = String((window.PPDURL && PPDURL.leer('fullscreen', '')) || '');
+  if (/^(1|true|si|sí|on)$/i.test(fsUrl)) setTimeout(function () { entrarPantalla(true); }, 120);
 })();
