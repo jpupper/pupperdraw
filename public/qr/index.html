@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PUPPERDRAW · QR de la sala</title>
+<meta name="description" content="QR de la sala de PUPPERDRAW: escaneá con el celular y entrás a pintar.">
+<meta name="robots" content="index, follow">
+<!-- Página SOLO QR: no carga la app (ni motor ni socket). Sirve para descargar,
+     imprimir o proyectar el QR de una sala.  ?sala=<nombre>  para elegir la sala. -->
+<style>
+  :root {
+    --fondo: #0b0b0e;
+    --tinta: #f5c518;
+    --texto: #cfcbc2;
+    --suave: #8b877e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px; min-height: 100vh;
+    background: radial-gradient(1200px 700px at 50% 0%, #17171d 0%, var(--fondo) 70%);
+    color: var(--texto);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .caja {
+    width: min(92vw, 460px);
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+  }
+  .marca {
+    font-size: 13px; letter-spacing: .34em; font-weight: 700;
+    color: var(--tinta); text-transform: uppercase;
+  }
+  .marca em { font-style: normal; color: #fff; }
+  .tarjeta {
+    width: 100%; padding: 18px;
+    background: #fff; border-radius: 16px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .55);
+  }
+  #qr { width: 100%; aspect-ratio: 1 / 1; }
+  #qr svg { width: 100%; height: 100%; display: block; }
+  .sala {
+    margin: 0; font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--suave);
+  }
+  .sala b { color: #fff; font-weight: 700; }
+  .link {
+    margin: 0; font-size: 11.5px; line-height: 1.4; word-break: break-all;
+    text-align: center; color: var(--suave); max-width: 100%;
+  }
+  .acciones { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .bot {
+    appearance: none; cursor: pointer;
+    padding: 9px 14px; border-radius: 999px;
+    font: inherit; font-size: 11px; letter-spacing: .12em; font-weight: 700;
+    text-transform: uppercase; text-decoration: none;
+    color: var(--tinta); background: rgba(245, 197, 24, .10);
+    border: 1px solid rgba(245, 197, 24, .45);
+  }
+  .bot:hover { background: rgba(245, 197, 24, .22); }
+  .pie { margin: 0; font-size: 10px; color: #57544e; letter-spacing: .06em; }
+  @media print {
+    body { background: #fff; padding: 0; min-height: 0; }
+    .marca, .sala, .acciones, .pie, .link { display: none; }
+    .tarjeta { box-shadow: none; padding: 0; width: 14cm; }
+    #qr { width: 14cm; height: 14cm; }
+  }
+</style>
+</head>
+<body>
+  <main class="caja">
+    <span class="marca">PUPPER<em>DRAW</em></span>
+    <div class="tarjeta"><div id="qr"></div></div>
+    <p class="sala">SALA <b id="salaNombre">principal</b></p>
+    <p class="link" id="link"></p>
+    <div class="acciones">
+      <a class="bot" id="btnPng" download>Descargar PNG</a>
+      <a class="bot" id="btnSvg" download>Descargar SVG</a>
+      <button class="bot" id="btnImprimir" type="button">Imprimir</button>
+    </div>
+    <p class="pie">escaneá con el celular y entrás a pintar</p>
+  </main>
+
+<script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  // sala por URL: esta página vive en /pupperdraw/qr/, así que la base de la app
+  // es todo lo de antes de "qr/"
+  function baseApp() {
+    var u = location.href.split('?')[0].split('#')[0];
+    return u.replace(/qr\/?$/i, '');
+  }
+  function linkDe(sala) {
+    return baseApp() + '?sala=' + encodeURIComponent(sala);
+  }
+  function nuevoQR(link) {
+    var q = qrcode(0, 'M');
+    q.addData(link);
+    q.make();
+    return q;
+  }
+  function svgDe(link, cellSize) {
+    // margen de 4 módulos = el "quiet zone" que pide el estándar para escanear
+    return nuevoQR(link).createSvgTag({ cellSize: cellSize || 12, margin: 4, scalable: true });
+  }
+  // PNG DE VERDAD: la lib devuelve un GIF en createDataURL, así que el PNG se
+  // dibuja módulo por módulo en un canvas (nítido, con el margen blanco de 4
+  // módulos que pide el estándar para que escanee).
+  function pngDe(link, lado) {
+    var q = nuevoQR(link);
+    var n = q.getModuleCount();
+    var quiet = 4;
+    lado = lado || 1024;
+    var cell = Math.max(1, Math.floor(lado / (n + quiet * 2)));
+    var total = cell * (n + quiet * 2);
+    var c = document.createElement('canvas');
+    c.width = total; c.height = total;
+    var g = c.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0, 0, total, total);
+    g.fillStyle = '#000';
+    for (var r = 0; r < n; r++) {
+      for (var col = 0; col < n; col++) {
+        if (q.isDark(r, col)) g.fillRect((col + quiet) * cell, (r + quiet) * cell, cell, cell);
+      }
+    }
+    return c.toDataURL('image/png');
+  }
+  // API para generar los archivos estáticos desde afuera (pruebas / scripts)
+  window.QRSolo = {
+    sala: function () { return ((new URLSearchParams(location.search)).get('sala') || 'principal'); },
+    link: function (sala) { return linkDe(sala || window.QRSolo.sala()); },
+    svg: function (sala, cell) { return svgDe(linkDe(sala || window.QRSolo.sala()), cell); },
+    png: function (sala, lado) { return pngDe(linkDe(sala || window.QRSolo.sala()), lado); },
+    // generadores con el link COMPLETO (para armar los archivos estáticos)
+    svgDeLink: function (l, cell) { return svgDe(l, cell); },
+    pngDeLink: function (l, lado) { return pngDe(l, lado); }
+  };
+
+  var sala = window.QRSolo.sala();
+  var link = linkDe(sala);
+  $('salaNombre').textContent = sala;
+  $('link').textContent = link;
+  $('qr').innerHTML = svgDe(link, 8);
+  $('btnPng').href = pngDe(link, 1024);
+  $('btnPng').download = 'pupperdraw-qr-' + sala + '.png';
+  $('btnSvg').href = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgDe(link, 12));
+  $('btnSvg').download = 'pupperdraw-qr-' + sala + '.svg';
+  $('btnImprimir').addEventListener('click', function () { window.print(); });
+})();
+</script>
+</body>
+</html>
